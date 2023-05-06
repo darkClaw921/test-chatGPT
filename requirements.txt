@@ -5,3 +5,4 @@ chromadb
 gspread
 oauth2client
 ipywidgets
+telebot
