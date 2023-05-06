@@ -21,7 +21,7 @@ sql = workYDB.Ydb()
 #print(answer)
 
 
-models = {
+models2 = {
     'model1': 'https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/edit?usp=sharing',
     'model2': 'https://docs.google.com/document/d/1deHxH4rTpuJLJ0fnvsWJe8RwFbpju0-hVLLqklnlAL4/edit?usp=sharing'
 }
@@ -66,10 +66,10 @@ def send_button(message):
         model = get_model_url(payload)        
     validation_promt = gpt.load_prompt(model)
 
-    answer = gpt.answer(validation_promt, context, temp = 0.1)
+    #answer = gpt.answer(validation_promt, context, temp = 0.1)
     sql.delete_query(message.chat.id, f'MODEL_DIALOG = "{payload}"')
     sql.set_payload(message.chat.id, ' ')
-    bot.send_message(message.chat.id, answer)
+    #bot.send_message(message.chat.id, answer)
     bot.send_message(message.chat.id, 
         "Контекст сброшен",)
 
@@ -90,7 +90,8 @@ def any_message(message):
     if payload == 'addmodel':
         text = text.split(' ')
         rows = {'model': text[1], 'url': text[0] }
-        sql.insert_query('model',rows)
+        #sql.insert_query('model',rows)
+        sql.replace_query('model',rows)
 
     context = sql.get_context(userID, payload)
     if context is None or context == '' or context == []:

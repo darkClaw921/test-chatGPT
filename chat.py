@@ -46,15 +46,6 @@ class GPT():
       login_button = widgets.Button(description='Авторизация')
       output = widgets.Output()
 
-
-      def on_button_clicked(_):
-          with output:
-              openai.api_key = key
-              #print
-              os.environ["OPENAI_API_KEY"] = openai.api_key
-              print(f'{bcolors.OKGREEN}{bcolors.BOLD}Ключ сохранен!{bcolors.ENDC}')
-             
-
       #login_button.on_click(on_button_clicked)
       #display(widgets.VBox([password_input, login_button, output]))
 
@@ -155,28 +146,7 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     return "\n".join(lines)
 
 
-  def dialog(self):
-    user = ''
-    dialog = ''
-
-    print(f'{bcolors.OKBLUE}{bcolors.BOLD}С чем связан ваш интерес к искусственному интеллекту?{bcolors.ENDC}')
-
-    while user.lower() not in ['stop', 'exit', 'выход']:
-      user = input('Клиент: ')
-      if (user == 'Stop'): break
-
-      dialog += '\n\n' + 'Клиент: ' + user
-      add_dialog = gpt.answer(expert_prompt, user)
-        
-      dialog += '\n\n' + 'Менеджер: ' + add_dialog      
-      print(f'\n{bcolors.OKBLUE}{bcolors.BOLD}Менеджер:{bcolors.ENDC} {self.insert_newlines(add_dialog)}')
-      report = gpt.answer(validation_prompt, dialog)
-      answer = gpt.answer(action_prompt, report)
-
-      print(f'\n{bcolors.OKGREEN}{bcolors.BOLD}Отчёт системы:\n {bcolors.ENDC}{report}')
-      print(f'\n{bcolors.HEADER}{bcolors.BOLD}Менеджер: {bcolors.ENDC}{self.insert_newlines(answer)}\n\n')
-
-    return dialog
+ 
 
   def answer_index(self, system, topic, search_index, temp = 1, verbose = 0):
     

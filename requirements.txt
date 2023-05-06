@@ -1,0 +1,7 @@
+tiktoken
+langchain
+openai
+chromadb
+gspread
+oauth2client
+ipywidgets
