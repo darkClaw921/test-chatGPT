@@ -193,9 +193,9 @@ class Ydb:
         #print('rez',rez)
         return rez
 
-    def select_query(self,tableName: str, dealID: str):
+    def select_query(self,tableName: str, where: str):
         # 'where id > 20 '
-        query = f'SELECT * FROM {tableName} WHERE ID="{dealID}"'
+        query = f'SELECT * FROM {tableName} WHERE {where}'
         #print(query)
 
         def a(session):
@@ -208,7 +208,7 @@ class Ydb:
         # IndexError: list index out of range если нет данныйх
         #print('b',b)
         rez = b[0].rows
-        #print('rez',rez)
+        print('rez',rez)
         return rez
 
 
