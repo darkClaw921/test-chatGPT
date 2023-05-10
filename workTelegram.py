@@ -19,7 +19,8 @@ sql = workYDB.Ydb()
 #answer = gpt.answer(expert_promt, 
 #           'Я хочу, чтобы после завершения обучения мне подобрали работу')
 #print(answer)
-
+#Главная модель
+model_index=gpt.load_search_indexes('https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UW/edit?usp=sharing')
 
 models2 = {
     'model1': 'https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/edit?usp=sharing',
@@ -53,9 +54,15 @@ def say_welcome(message):
     row = {'id': message.chat.id, 'payload': '',}
     sql.replace_query('user', row)
 
-    bot.send_message(message.chat.id,'/addmodel добавление новой модели\n/model1 - модель 1 Просто обычный чат после /context пришлет отчет по клиенту\n', 
+    bot.send_message(message.chat.id,'/addmodel добавление новой модели\n/model1 - модель 1 Просто обычный чат /context сбросит контекст по текущей модели\nДоюавление моделей кроме model1 пока нельзя\n/restart перезапись главного документа',
                      parse_mode='markdown')
-expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/')
+#expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/')
+
+@bot.message_handler(commands=['restart'])
+def restart_modal_index(message):
+    global model_index
+    model_index=gpt.load_search_indexes('https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96U/edit?usp=sharing')
+
 @bot.message_handler(commands=['context'])
 def send_button(message):
     payload = sql.get_payload(message.chat.id)
@@ -98,8 +105,11 @@ def any_message(message):
         context = text
 
     print('context2', context + f'клиент: {text}')
+    #model= gpt.load_prompt('https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing')
     model= gpt.load_prompt(get_model_url(payload))
-    answer = gpt.answer(model, text, temp = 0.1)
+    #model= gpt.load_prompt(get_model_url(payload))
+    #answer = gpt.answer(model, text, temp = 0.1)
+    answer = gpt.answer_index(model, text, model_index,)
     print('answer', answer)
     bot.send_message(message.chat.id, answer)
     #if payload == 'model3':
