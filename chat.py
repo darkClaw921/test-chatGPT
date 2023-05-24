@@ -100,7 +100,7 @@ class GPT():
     return search_index
 
   #def answer(self, system, topic, temp = 1):    
-  def answer(self, system, messages:list[dict[str, str]], temp = 1):    
+  def answer(self, system, messages:list, temp = 1):    
     """messages = [
       {"role": "system", "content": system},
       {"role": "user", "content": topic}
@@ -149,7 +149,7 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
 
  
 
-  def answer_index(self, system, topic, history:list[dict[str, str]], search_index, temp = 1, verbose = 0):
+  def answer_index(self, system, topic, history:list, search_index, temp = 1, verbose = 0):
     
     #Выборка документов по схожести с вопросом 
     docs = search_index.similarity_search(topic, k=5)
