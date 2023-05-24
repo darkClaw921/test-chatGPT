@@ -99,12 +99,13 @@ class GPT():
     print('ЦЕНА запроса:', 0.0004*(count_token/1000), ' $')
     return search_index
 
-  def answer(self, system, topic, temp = 1):    
-    messages = [
+  #def answer(self, system, topic, temp = 1):    
+  def answer(self, system, messages:list[dict[str, str]], temp = 1):    
+    """messages = [
       {"role": "system", "content": system},
       {"role": "user", "content": topic}
       ]
-
+    """
     completion = openai.ChatCompletion.create(
       model="gpt-3.5-turbo",
       messages=messages,
@@ -148,7 +149,7 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
 
  
 
-  def answer_index(self, system, topic, search_index, temp = 1, verbose = 0):
+  def answer_index(self, system, topic, history:list[dict[str, str]], search_index, temp = 1, verbose = 0):
     
     #Выборка документов по схожести с вопросом 
     docs = search_index.similarity_search(topic, k=5)
@@ -158,8 +159,10 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
 
     messages = [
       {"role": "system", "content": system + f"{message_content}"},
-      {"role": "user", "content": topic}
+      #{"role": "user", "content": topic}
+      #{"role": "user", "content": context}
       ]
+    messages.extend(history)
 
     # example token count from the function defined above
     if (verbose): print('\n ===========================================: ')
@@ -177,8 +180,9 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     if (verbose): print('\n ===========================================: ')
     print('ОТВЕТ : \n', self.insert_newlines(completion.choices[0].message.content))
 
-    # return completion
-
+    answer = completion.choices[0].message.content
+    return answer
+  
   def get_chatgpt_ansver3(self, system, topic, search_index, temp = 1):
     
     messages = [
