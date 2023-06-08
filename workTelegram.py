@@ -51,6 +51,14 @@ def get_history(userID:str):
     history = [json.loads(m.decode("utf-8")) for m in items[::-1]]
     return history
 
+def add_old_history(userID:str, history:list):
+    his = history.copy()
+    clear_history(userID)
+    for i in his:
+        mess = i
+        r.lpush(userID, json.dumps(mess))
+
+
 def clear_history(userID:str):
     r.delete(userID)
 
@@ -116,13 +124,25 @@ def any_message(message):
         #context = text
     add_message_to_history(userID, 'user', text)
     history = get_history(str(userID))
+
+
     #print('context2', context + f'клиент: {text}')
     #model= gpt.load_prompt('https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing')
     model= gpt.load_prompt(get_model_url(payload))
     #model= gpt.load_prompt(get_model_url(payload))
     #answer = gpt.answer(model, text, temp = 0.1)
     #answer = gpt.answer_index(model, text, model_index,)
-    answer, answerBlock = gpt.answer_index(model, text, history, model_index, verbose=1)
+    try:
+        answer = gpt.answer_index(model, text, history, model_index, verbose=1)
+    except Exception as e:
+        history = get_history(str(userID))
+        history.pop(1)
+        history.pop(1)
+        history.pop(1)
+        history.pop(1)
+        add_old_history(userID,history)
+        answer = gpt.answer_index(model, text, history, model_index, verbose=1)
+        bot.send_message(userID, e)
     #answer, answerBlock = gpt.answer_index(model, context, model_index, verbose=1)
     print('answer', answer)
     add_message_to_history(userID, 'assistant', answer)
