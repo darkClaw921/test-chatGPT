@@ -111,7 +111,7 @@ def dialog_model1(message):
     sql.set_payload(message.chat.id, 'model1')
     bot.send_message(message.chat.id,'Что вы хотите узнать?',)
 
-
+@logger.catch
 @bot.message_handler(content_types=['text'])
 def any_message(message):
     #print('это сообщение', message)
