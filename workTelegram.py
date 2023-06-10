@@ -23,11 +23,12 @@ sql = workYDB.Ydb()
 r = redis.Redis(host='localhost', port=6379, decode_responses=False)
 #print(answer)
 model_index=gpt.load_search_indexes('https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing')
-
-models2 = {
-    'model1': 'https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/edit?usp=sharing',
-    'model2': 'https://docs.google.com/document/d/1deHxH4rTpuJLJ0fnvsWJe8RwFbpju0-hVLLqklnlAL4/edit?usp=sharing'
-}
+url = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
+model= gpt.load_prompt(url)
+#models2 = {
+#    'model1': 'https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/edit?usp=sharing',
+#    'model2': 'https://docs.google.com/document/d/1deHxH4rTpuJLJ0fnvsWJe8RwFbpju0-hVLLqklnlAL4/edit?usp=sharing'
+#}
 
 def time_epoch():
     from time import mktime
@@ -107,7 +108,7 @@ def dialog_model1(message):
 
 @bot.message_handler(content_types=['text'])
 def any_message(message):
-    print('это сообщение', message)
+    #print('это сообщение', message)
     #text = message.text.lower()
     text = message.text
     userID= message.chat.id
@@ -128,24 +129,39 @@ def any_message(message):
 
     #print('context2', context + f'клиент: {text}')
     #model= gpt.load_prompt('https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing')
-    model= gpt.load_prompt(get_model_url(payload))
+    #model= gpt.load_prompt(get_model_url(payload))
     #model= gpt.load_prompt(get_model_url(payload))
     #answer = gpt.answer(model, text, temp = 0.1)
     #answer = gpt.answer_index(model, text, model_index,)
+    
     try:
-        answer = gpt.answer_index(model, text, history, model_index, verbose=1)
+        answer = gpt.answer_index(model, text, history, model_index, verbose=0)
+        print('мы получили ответ \n', answer)
     except Exception as e:
-        history = get_history(str(userID))
-        history.pop(1)
-        history.pop(1)
-        history.pop(1)
-        history.pop(1)
-        add_old_history(userID,history)
-        answer = gpt.answer_index(model, text, history, model_index, verbose=1)
         bot.send_message(userID, e)
+        bot.send_message(userID, 'начинаю sammury: ответ может занять больше времени, но не более 3х минут')
+        history = get_history(str(userID))
+        summaryHistory = gpt.get_summary(history)
+        print(f'summary: {summaryHistory}')
+        print('история до очистки \n', history)
+        print('история summary \n', summaryHistory)
+        #clear_history(userID)
+        history = [summaryHistory]
+        history.extend([{'role':'user', 'content': text}])
+        add_old_history(userID,history)
+        history = get_history(str(userID))
+        print('история после очистки\n', history)
+        
+        answer = gpt.answer_index(model, text, history, model_index, verbose=0)
+        bot.send_message(message.chat.id, answer)
+        add_message_to_history(userID, 'assistant', answer)
+
+        return 0 
     #answer, answerBlock = gpt.answer_index(model, context, model_index, verbose=1)
-    print('answer', answer)
+    #print('answer_index', answer)
     add_message_to_history(userID, 'assistant', answer)
+    #b = gpt.get_summary(history)
+    #print(f'{b=}')
     #for i in answerBlock:
     #    bot.send_message(message.chat.id, i)
     

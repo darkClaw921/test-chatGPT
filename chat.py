@@ -32,7 +32,9 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 class GPT():
-  def __init__(self):
+  modelVersion = ''
+  def __init__(self,modelVersion:str = 'gpt-3.5-turbo'):
+    self.modelVersion = modelVersion
     pass
 
   @classmethod
@@ -107,7 +109,8 @@ class GPT():
       ]
     """
     completion = openai.ChatCompletion.create(
-      model="gpt-3.5-turbo",
+      model=self.modelVersion,
+      #model="gpt-3.5-turbo",
       messages=messages,
       temperature=temp
       )
@@ -169,7 +172,8 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     if (verbose): print(f"{self.num_tokens_from_messages(messages, 'gpt-3.5-turbo-0301')} токенов использовано на вопрос")
 
     completion = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",
+    model=self.modelVersion,
+    #model="gpt-3.5-turbo",
     messages=messages,
     temperature=temp
     )
@@ -183,6 +187,32 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     answer = completion.choices[0].message.content
     return answer
   
+  def get_summary(self, history:list, temp = 1):    
+    """messages = [
+      {"role": "system", "content": system},
+      {"role": "user", "content": topic}
+      ]
+    """
+    promtMessage = """Write a concise summary of the following and CONCISE SUMMARY IN RUSSIAN:"""
+    messages = [
+      {"role": "system", "content": promtMessage},
+      #{"role": "user", "content": topic}
+      #{"role": "user", "content": context}
+      ]
+    messages.extend(history)
+    print('answer message get_summary',messages)
+    completion = openai.ChatCompletion.create(
+      model=self.modelVersion,
+      #model="gpt-3.5-turbo",
+      messages=messages,
+      temperature=temp
+      )
+    print(f'{completion["usage"]["total_tokens"]=}')
+    print(f'{completion["usage"]=}')
+    answer =completion.choices[0].message.content  
+    roleAsnwer= {'role': 'system', 'content': answer}
+    return roleAsnwer
+  
   def get_chatgpt_ansver3(self, system, topic, search_index, temp = 1):
     
     messages = [
@@ -191,7 +221,8 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
       ]
 
     completion = openai.ChatCompletion.create(
-      model="gpt-3.5-turbo",
+      model=self.modelVersion,
+      #model="gpt-3.5-turbo",
       messages=messages,
       temperature=temp
       )
