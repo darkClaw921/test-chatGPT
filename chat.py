@@ -5,19 +5,17 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.prompts import PromptTemplate
-import pathlib
-import subprocess
-import tempfile
 import ipywidgets as widgets
-import os
-import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import re
 
-import os
 import openai
 import tiktoken
-import re
+import sys
+from loguru import logger
+
+logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
+logger.add("file_1.log", rotation="50 MB")
 
 
 class bcolors:
@@ -114,7 +112,7 @@ class GPT():
       messages=messages,
       temperature=temp
       )
-
+    logger.info(f'answer chat.py {completion.choices[0].message.content}')
     return completion.choices[0].message.content
 
   def num_tokens_from_messages(self, messages, model="gpt-3.5-turbo-0301"):
@@ -200,16 +198,17 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
       #{"role": "user", "content": context}
       ]
     messages.extend(history)
-    print('answer message get_summary',messages)
+    logger.info(f'answer message get_summary {messages}')
     completion = openai.ChatCompletion.create(
       model=self.modelVersion,
       #model="gpt-3.5-turbo",
       messages=messages,
       temperature=temp
       )
-    print(f'{completion["usage"]["total_tokens"]=}')
-    print(f'{completion["usage"]=}')
+    logger.info(f'{completion["usage"]["total_tokens"]=}')
+    logger.info(f'{completion["usage"]=}')
     answer =completion.choices[0].message.content  
+    logger.info(answer)
     roleAsnwer= {'role': 'system', 'content': answer}
     return roleAsnwer
   

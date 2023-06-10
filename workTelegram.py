@@ -9,8 +9,12 @@ from datetime import datetime
 import workYDB
 import redis
 import json
+from loguru import logger
+import sys
 load_dotenv()
 
+logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
+logger.add("file_1.log", rotation="50 MB")
 gpt = GPT()
 GPT.set_key(os.getenv('KEY_AI'))
 bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN'))
@@ -40,7 +44,8 @@ def time_epoch():
 
 def get_model_url(modelName: str):
     modelUrl = sql.select_query('model', f'model = "{modelName}"')[0]['url']
-    print('a', modelUrl)
+    logger.info(f'get_model_url {modelUrl}')
+    #print('a', modelUrl)
     return modelUrl.decode('utf-8')
 
 def add_message_to_history(userID:str, role:str, message:str):
@@ -76,6 +81,7 @@ def say_welcome(message):
     sql.create_table(str(message.chat.id), row)
     row = {'id': message.chat.id, 'payload': '',}
     sql.replace_query('user', row)
+    
 
     bot.send_message(message.chat.id,'/addmodel добавление новой модели\n/model1 - модель 1 Просто обычный чат /context сбросит контекст по текущей модели\nДоюавление моделей кроме model1 пока нельзя\n/restart перезапись главного документа', 
                      parse_mode='markdown')
@@ -136,21 +142,25 @@ def any_message(message):
     
     try:
         answer = gpt.answer_index(model, text, history, model_index, verbose=0)
-        print('мы получили ответ \n', answer)
+        logger.info(f'ответ сети если нет ощибок: {answer}')
+        #print('мы получили ответ \n', answer)
     except Exception as e:
         bot.send_message(userID, e)
         bot.send_message(userID, 'начинаю sammury: ответ может занять больше времени, но не более 3х минут')
         history = get_history(str(userID))
         summaryHistory = gpt.get_summary(history)
-        print(f'summary: {summaryHistory}')
-        print('история до очистки \n', history)
-        print('история summary \n', summaryHistory)
+        logger.info(f'summary истории {summaryHistory}')
+        #print(f'summary: {summaryHistory}')
+        logger.info(f'история до summary {history}')
+        #print('история до очистки \n', history)
+        #print('история summary \n', summaryHistory)
         #clear_history(userID)
         history = [summaryHistory]
         history.extend([{'role':'user', 'content': text}])
         add_old_history(userID,history)
         history = get_history(str(userID))
-        print('история после очистки\n', history)
+        logger.info(f'история после summary {history}')
+        #print('история после очистки\n', history)
         
         answer = gpt.answer_index(model, text, history, model_index, verbose=0)
         bot.send_message(message.chat.id, answer)

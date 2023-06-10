@@ -2,6 +2,12 @@ import os
 import ydb
 import ydb.iam
 from dotenv import load_dotenv
+from loguru import logger
+import sys
+
+logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
+logger.add("file_1.log", rotation="50 MB")
+
 load_dotenv()
 
 driver = ydb.Driver(
@@ -48,7 +54,8 @@ class Ydb:
         value = value[:-1] + ')'
         # values_placeholder_format = ', '.join(my_list)
         query = f"REPLACE INTO {tableName} ({fields_format}) VALUES {value}"
-        print(query)
+        logger.info(query)
+        #print(query)
 
         def a(session):
             session.transaction(ydb.SerializableReadWrite()).execute(
@@ -80,6 +87,7 @@ class Ydb:
 
         # values_placeholder_format = ', '.join(my_list)
         query = f'UPDATE {tableName} SET {sets} WHERE {where}'
+        logger.info(query)
         # query = f"INSERT INTO {tableName} ({fields_format}) " \
         #print(query)
 
@@ -93,6 +101,7 @@ class Ydb:
     def delete_query(self, tableName: str, where: str):
         # 'where id > 20 '
         query = f"DELETE FROM `{tableName}` WHERE {where}"
+        logger.info(query)
         #print(query)
 
         def a(session):
@@ -110,7 +119,8 @@ class Ydb:
 
         query = query[:-1] + ', PRIMARY KEY (id) ) '
         #print('CREATE TABLE',tableName)
-        print(query)
+        #print(query)
+        logger.info(query)
         def a(session):
             session.execute_scheme(
                 query,
@@ -140,7 +150,8 @@ class Ydb:
         value = value[:-1] + ')'
         # values_placeholder_format = ', '.join(my_list)
         query = f"INSERT INTO `{tableNameUserID}` ({fields_format}) VALUES {value}"
-        print(query)
+        logger.info(query)
+        #print(query)
         def a(session):
             session.transaction(ydb.SerializableReadWrite()).execute(
             #session(ydb.SerializableReadWrite()).execute(
@@ -166,7 +177,8 @@ class Ydb:
         context = ''
         for i in rez:
             context += i['TEXT'].decode('utf-8')+ '\n'
-        print('context',context)
+        #print('context',context)
+        logger.info(f'context {query=}')
         return context
     
     def set_payload(self, userID: int, payload: str):
@@ -181,8 +193,9 @@ class Ydb:
 
     def get_payload(self, whereID: int):
         query = f'SELECT payload FROM user WHERE id = {whereID}'
-        print(query)
+        #print(query)
 
+        logger.info(query)
         def a(session):
             return session.transaction().execute(
                 query,
@@ -201,6 +214,7 @@ class Ydb:
         query = f'SELECT * FROM {tableName} WHERE {where}'
         #print(query)
 
+        logger.info(query)
         def a(session):
             return session.transaction().execute(
                 query,
@@ -211,7 +225,8 @@ class Ydb:
         # IndexError: list index out of range если нет данныйх
         #print('b',b)
         rez = b[0].rows
-        print('rez',rez)
+        #print('rez',rez)
+        logger.info(f"rez select_auery {query=}")
         return rez
 
 
