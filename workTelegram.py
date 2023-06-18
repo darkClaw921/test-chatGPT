@@ -146,7 +146,7 @@ def any_message(message):
         logger.info(f'ответ сети если нет ощибок: {answer}')
         #print('мы получили ответ \n', answer)
     except Exception as e:
-        bot.send_message(userID, e)
+        #bot.send_message(userID, e)
         bot.send_message(userID, 'начинаю sammury: ответ может занять больше времени, но не более 3х минут')
         history = get_history(str(userID))
         summaryHistory = gpt.get_summary(history)
