@@ -7,3 +7,4 @@ oauth2client
 ipywidgets
 telebot
 loguru
+fast-bitrix24

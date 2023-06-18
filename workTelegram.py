@@ -11,6 +11,7 @@ import redis
 import json
 from loguru import logger
 import sys
+from createKeyboard import create_menu_keyboard
 load_dotenv()
 
 logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
@@ -85,13 +86,16 @@ def say_welcome(message):
     text = """Здравствуйте, я AI ассистент компании Сканди ЭкоДом. Я отвечу на Ваши вопросы по поводу строительства загородного дома и задам свои 😁. Хотите я Вам расскажу про варианты комплектации домов?
     """
     bot.send_message(message.chat.id, text, 
-                     parse_mode='markdown')
+                     parse_mode='markdown',
+                     reply_markup= create_menu_keyboard())
 #expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/')
 
 @bot.message_handler(commands=['restart'])
 def restart_modal_index(message):
-    global model_index 
+    global model_index, model 
     model_index=gpt.load_search_indexes('https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing')
+    url = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
+    model= gpt.load_prompt(url)
 
 @bot.message_handler(commands=['context'])
 def send_button(message):
