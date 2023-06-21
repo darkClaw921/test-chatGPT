@@ -14,8 +14,8 @@ import tiktoken
 import sys
 from loguru import logger
 
-logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
-logger.add("file_1.log", rotation="50 MB")
+#logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
+#logger.add("file_1.log", rotation="50 MB")
 
 
 class bcolors:
@@ -85,7 +85,8 @@ class GPT():
       return num_tokens
 
     source_chunks = []
-    splitter = CharacterTextSplitter(separator="\n", chunk_size=1024, chunk_overlap=0)
+    #splitter = CharacterTextSplitter(separator="\n", chunk_size=1524, chunk_overlap=0)
+    splitter = CharacterTextSplitter(separator="<", chunk_size=2300, chunk_overlap=0)
 
     for chunk in splitter.split_text(data):
       source_chunks.append(Document(page_content=chunk, metadata={}))
@@ -153,7 +154,7 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
   def answer_index(self, system, topic, history:list, search_index, temp = 1, verbose = 0):
     
     #Выборка документов по схожести с вопросом 
-    docs = search_index.similarity_search(topic, k=5)
+    docs = search_index.similarity_search(topic, k=3)
     if (verbose): print('\n ===========================================: ')
     message_content = re.sub(r'\n{2}', ' ', '\n '.join([f'\nОтрывок документа №{i+1}\n=====================' + doc.page_content + '\n' for i, doc in enumerate(docs)]))
     if (verbose): print('message_content :\n ======================================== \n', message_content)

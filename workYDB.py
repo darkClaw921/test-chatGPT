@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 from loguru import logger
 import sys
 
-logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
-logger.add("file_1.log", rotation="50 MB")
+#logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
+#logger.add("file_1.log", rotation="50 MB")
 
 load_dotenv()
 
@@ -14,10 +14,10 @@ driver = ydb.Driver(
   endpoint=os.getenv('YDB_ENDPOINT'),
   database=os.getenv('YDB_DATABASE'),
   #credentials=ydb.iam.MetadataUrlCredentials(),)
-  #credentials=ydb.AccessTokenCredentials(os.getenv('YDB_CREDINTALS_TOKEN')))
-  credentials=ydb.iam.ServiceAccountCredentials.from_file(
-            os.getenv("SA_KEY_FILE")
-        ))
+  credentials=ydb.AccessTokenCredentials(os.getenv('YDB_CREDINTALS_TOKEN')))
+  #credentials=ydb.iam.ServiceAccountCredentials.from_file(
+  #          os.getenv("SA_KEY_FILE")
+  #      ))
 # Wait for the driver to become active for requests.G
 driver.wait(fail_fast=True, timeout=5)
 # Create the session pool instance to manage YDB sessions.

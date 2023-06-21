@@ -136,6 +136,7 @@ def any_message(message):
         #context = text
     add_message_to_history(userID, 'user', text)
     history = get_history(str(userID))
+    logger.info(f'история {history}')
 
 
     #print('context2', context + f'клиент: {text}')
@@ -146,7 +147,7 @@ def any_message(message):
     #answer = gpt.answer_index(model, text, model_index,)
     
     try:
-        answer = gpt.answer_index(model, text, history, model_index, verbose=0)
+        answer = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=1)
         logger.info(f'ответ сети если нет ощибок: {answer}')
         #print('мы получили ответ \n', answer)
     except Exception as e:
@@ -167,7 +168,7 @@ def any_message(message):
         logger.info(f'история после summary {history}')
         #print('история после очистки\n', history)
         
-        answer = gpt.answer_index(model, text, history, model_index, verbose=0)
+        answer = gpt.answer_index(model, text, history, model_index,temp=0.2, verbose=1)
         bot.send_message(message.chat.id, answer)
         add_message_to_history(userID, 'assistant', answer)
 
