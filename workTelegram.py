@@ -27,9 +27,10 @@ sql = workYDB.Ydb()
 #           'Я хочу, чтобы после завершения обучения мне подобрали работу')
 r = redis.Redis(host='localhost', port=6379, decode_responses=False)
 #print(answer)
-model_index=gpt.load_search_indexes('https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing')
-url = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
-model= gpt.load_prompt(url)
+MODEL_URL= 'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing'
+model_index=gpt.load_search_indexes(MODEL_URL)
+PROMT_URL = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
+model= gpt.load_prompt(PROMT_URL)
 #models2 = {
 #    'model1': 'https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/edit?usp=sharing',
 #    'model2': 'https://docs.google.com/document/d/1deHxH4rTpuJLJ0fnvsWJe8RwFbpju0-hVLLqklnlAL4/edit?usp=sharing'
@@ -93,9 +94,13 @@ def say_welcome(message):
 @bot.message_handler(commands=['restart'])
 def restart_modal_index(message):
     global model_index, model 
-    model_index=gpt.load_search_indexes('https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing')
-    url = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
-    model= gpt.load_prompt(url)
+    model_index=gpt.load_search_indexes(MODEL_URL)
+    #url = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
+    #model= gpt.load_prompt(url)
+    model= gpt.load_prompt(PROMT_URL)
+    bot.send_message(message.chat.id, 'Обновлено', 
+                     parse_mode='markdown',
+                     reply_markup= create_menu_keyboard())
 
 @bot.message_handler(commands=['context'])
 def send_button(message):

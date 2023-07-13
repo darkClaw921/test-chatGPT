@@ -49,7 +49,7 @@ class Sheet():
         allText = ''
         for i in tqdm(range(2,118)):
             text = self.get_rom_value(i)
-            time.sleep(0.5)
+            time.sleep(1.2)
             allText += prepare_text(text)
 
         return allText
