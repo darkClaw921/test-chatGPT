@@ -3,7 +3,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 from loguru import logger
 from dataclasses import dataclass
 from pprint import pprint
-
+import time
+from tqdm import tqdm
 class Sheet():
 
     @logger.catch
@@ -46,10 +47,11 @@ class Sheet():
     
     def get_gs_text(self):
         allText = ''
-        for i in range(2,118):
+        for i in tqdm(range(2,118)):
             text = self.get_rom_value(i)
+            time.sleep(0.5)
             allText += prepare_text(text)
-            
+
         return allText
 
 @dataclass
