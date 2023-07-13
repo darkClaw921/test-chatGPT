@@ -60,7 +60,7 @@ class GPT():
     response = requests.get(f'https://docs.google.com/document/d/{doc_id}/export?format=txt')
     response.raise_for_status()
     text = response.text
-    gsText = workGS.get_gs_text()
+    gsText = sheet.get_gs_text()
     print(f'{gsText}')
     text = text + gsText
     return self.create_embedding(text)
