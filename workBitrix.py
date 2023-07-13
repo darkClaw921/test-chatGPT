@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 from pprint import pprint
 load_dotenv()
-webHook = ''
+webHook = os.environ.get('webHook')
 bit = Bitrix(webHook)
 
 def deal_history():

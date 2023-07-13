@@ -180,7 +180,11 @@ def any_message(message):
     #print(f'{b=}')
     #for i in answerBlock:
     #    bot.send_message(message.chat.id, i)
-    
+    prepareAnswer= answer.lower()
+    if prepareAnswer.find('cпасибо за предоставленный номер'):
+        bot.send_message(message.chat.id, answer) 
+        print('запиь в битрикс')
+        update_deal() 
     bot.send_message(message.chat.id, answer)
     #if payload == 'model3':
     rows = {'id': time_epoch(),'MODEL_DIALOG': payload, 'TEXT': f'клиент: {text}'}

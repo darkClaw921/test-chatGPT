@@ -13,10 +13,10 @@ import openai
 import tiktoken
 import sys
 from loguru import logger
-
+import workGS
 #logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
 #logger.add("file_1.log", rotation="50 MB")
-
+sheet = workGS.Sheet('kgtaprojects-8706cc47a185.json','цены на дома 4.0 актуально ')
 
 class bcolors:
     HEADER = '\033[95m'
@@ -60,6 +60,9 @@ class GPT():
     response = requests.get(f'https://docs.google.com/document/d/{doc_id}/export?format=txt')
     response.raise_for_status()
     text = response.text
+    gsText = workGS.get_gs_text()
+    print(f'{gsText}')
+    text = text + gsText
     return self.create_embedding(text)
 
   def load_prompt(self, 
@@ -186,13 +189,15 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     answer = completion.choices[0].message.content
     return answer
   
-  def get_summary(self, history:list, temp = 1):    
+  def get_summary(self, history:list, 
+                  promtMessage = 'Write a concise summary of the following and CONCISE SUMMARY IN RUSSIAN:',
+                  temp = 1):    
     """messages = [
       {"role": "system", "content": system},
       {"role": "user", "content": topic}
       ]
     """
-    promtMessage = """Write a concise summary of the following and CONCISE SUMMARY IN RUSSIAN:"""
+    #promtMessage = """Write a concise summary of the following and CONCISE SUMMARY IN RUSSIAN:"""
     messages = [
       {"role": "system", "content": promtMessage},
       #{"role": "user", "content": topic}
