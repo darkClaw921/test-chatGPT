@@ -12,7 +12,10 @@ import json
 from loguru import logger
 import sys
 from createKeyboard import create_menu_keyboard
+from workBitrix import *
+from helper import *
 load_dotenv()
+
 
 logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
 logger.add("file_1.log", rotation="50 MB")
@@ -31,6 +34,7 @@ MODEL_URL= 'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358
 model_index=gpt.load_search_indexes(MODEL_URL)
 PROMT_URL = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
 model= gpt.load_prompt(PROMT_URL)
+PROMT_URL_SUMMARY ='https://docs.google.com/document/d/1XhSDXvzNKA9JpF3QusXtgMnpFKY8vVpT9e3ZkivPePE/edit?usp=sharing'
 #models2 = {
 #    'model1': 'https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/edit?usp=sharing',
 #    'model2': 'https://docs.google.com/document/d/1deHxH4rTpuJLJ0fnvsWJe8RwFbpju0-hVLLqklnlAL4/edit?usp=sharing'
@@ -129,7 +133,7 @@ def any_message(message):
     text = message.text
     userID= message.chat.id
     payload = sql.get_payload(userID)
-    
+
     if payload == 'addmodel':
         text = text.split(' ')
         rows = {'model': text[1], 'url': text[0] }
@@ -157,9 +161,10 @@ def any_message(message):
         #print('мы получили ответ \n', answer)
     except Exception as e:
         #bot.send_message(userID, e)
-        bot.send_message(userID, 'начинаю sammury: ответ может занять больше времени, но не более 3х минут')
+        #bot.send_message(userID, 'начинаю sammury: ответ может занять больше времени, но не более 3х минут')
         history = get_history(str(userID))
         summaryHistory = gpt.get_summary(history)
+
         logger.info(f'summary истории {summaryHistory}')
         #print(f'summary: {summaryHistory}')
         logger.info(f'история до summary {history}')
@@ -186,16 +191,32 @@ def any_message(message):
     #for i in answerBlock:
     #    bot.send_message(message.chat.id, i)
     prepareAnswer= answer.lower()
-    if prepareAnswer.find('cпасибо за предоставленный номер'):
+    print(f'{prepareAnswer=}')
+    print(f"{prepareAnswer.find('спасибо за предоставленный номер')=}") 
+    b = prepareAnswer.find('спасибо за предоставленный номер') 
+    print(f'{b=}')
+    if b == 0:
+        print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
+        PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
+        history = get_history(str(userID)) 
+        history_answer = gpt.answer(PROMT_SUMMARY,history)
+        print(f'{history_answer=}')
         bot.send_message(message.chat.id, answer) 
+        phone = slice_str_phone(history_answer)
+        pprint(f"{phone=}")
+        
         print('запиь в битрикс')
-        update_deal() 
+        update_deal(phone, history_answer) 
     bot.send_message(message.chat.id, answer)
     #if payload == 'model3':
-    rows = {'id': time_epoch(),'MODEL_DIALOG': payload, 'TEXT': f'клиент: {text}'}
+    rows = {'id': time_epoch(),
+            'MODEL_DIALOG': payload,
+            'TEXT': f'клиент: {text}'}
     sql.insert_query(userID,  rows)
 
-    rows = {'id': time_epoch()+1,'MODEL_DIALOG': payload, 'TEXT': f'менеджер: {answer}'}
+    rows = {'id': time_epoch()+1,
+            'MODEL_DIALOG': payload,
+            'TEXT': f'менеджер: {answer}'}
     sql.insert_query(userID,  rows)
 
 bot.infinity_polling()

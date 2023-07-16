@@ -2,22 +2,17 @@ import os
 import ydb
 import ydb.iam
 from dotenv import load_dotenv
-from loguru import logger
-import sys
-
-#logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
-#logger.add("file_1.log", rotation="50 MB")
-
+from helper import *
 load_dotenv()
 
 driver = ydb.Driver(
   endpoint=os.getenv('YDB_ENDPOINT'),
   database=os.getenv('YDB_DATABASE'),
   #credentials=ydb.iam.MetadataUrlCredentials(),)
-  #credentials=ydb.AccessTokenCredentials(os.getenv('YDB_CREDINTALS_TOKEN')))
-  credentials=ydb.iam.ServiceAccountCredentials.from_file(
-            os.getenv("SA_KEY_FILE")
-        ))
+  credentials=ydb.AccessTokenCredentials(os.getenv('YDB_CREDINTALS_TOKEN')))
+  #credentials=ydb.iam.ServiceAccountCredentials.from_file(
+  #         os.getenv("SA_KEY_FILE")
+  #      ))
 # Wait for the driver to become active for requests.G
 driver.wait(fail_fast=True, timeout=5)
 # Create the session pool instance to manage YDB sessions.
@@ -54,8 +49,7 @@ class Ydb:
         value = value[:-1] + ')'
         # values_placeholder_format = ', '.join(my_list)
         query = f"REPLACE INTO {tableName} ({fields_format}) VALUES {value}"
-        logger.info(query)
-        #print(query)
+        print(query)
 
         def a(session):
             session.transaction(ydb.SerializableReadWrite()).execute(
@@ -72,9 +66,15 @@ class Ydb:
         my_list = list(rows.values())
         sets = ''
         for key, value in rows.items():
-            if key == 'ID':
+            if key in ['ID']:
                 continue
-            sets += f'{key} = "{value}",'
+            if key == 'all_price':
+                sets += f'{key} = {float(value)},'
+            elif key in ['all_token', 'all_messages']:
+                sets += f'{key} = {int(value)},'
+            else:
+                sets += f'{key} = "{value}",'
+
             """
             try:
                 sets += f'{key} = {int(value)},'
@@ -87,9 +87,8 @@ class Ydb:
 
         # values_placeholder_format = ', '.join(my_list)
         query = f'UPDATE {tableName} SET {sets} WHERE {where}'
-        logger.info(query)
         # query = f"INSERT INTO {tableName} ({fields_format}) " \
-        #print(query)
+        print(query)
 
         def a(session):
             session.transaction(ydb.SerializableReadWrite()).execute(
@@ -98,10 +97,28 @@ class Ydb:
             )
         return pool.retry_operation_sync(a)
 
+    def plus_query_user(self, tableName: str, rows: dict, where: str):
+        # 'where id > 20 '
+        """складывает предыдущие значения row с новыми"""
+        get = self.select_query(tableName, where)[0]
+        row = 0
+        try:
+            get = {'all_price': float(get['all_price']), 'all_token': int(get['all_token']), 'all_messages':int(get['all_messages'])}
+        except Exception as e:
+            print('e', e)
+            get = {'all_price': 0, 'all_token': 0, 'all_messages': 0}
+        try:
+            row = sum_dict_values(get, rows)
+        except Exception as e:
+            print('ошибка',e)
+            row = rows
+        print(f'{get=}') 
+        print(f'{row=}') 
+        self.update_query(tableName, row, where)
+
     def delete_query(self, tableName: str, where: str):
         # 'where id > 20 '
         query = f"DELETE FROM `{tableName}` WHERE {where}"
-        logger.info(query)
         #print(query)
 
         def a(session):
@@ -119,8 +136,7 @@ class Ydb:
 
         query = query[:-1] + ', PRIMARY KEY (id) ) '
         #print('CREATE TABLE',tableName)
-        #print(query)
-        logger.info(query)
+        print(query)
         def a(session):
             session.execute_scheme(
                 query,
@@ -150,8 +166,7 @@ class Ydb:
         value = value[:-1] + ')'
         # values_placeholder_format = ', '.join(my_list)
         query = f"INSERT INTO `{tableNameUserID}` ({fields_format}) VALUES {value}"
-        logger.info(query)
-        #print(query)
+        print(query)
         def a(session):
             session.transaction(ydb.SerializableReadWrite()).execute(
             #session(ydb.SerializableReadWrite()).execute(
@@ -177,12 +192,11 @@ class Ydb:
         context = ''
         for i in rez:
             context += i['TEXT'].decode('utf-8')+ '\n'
-        #print('context',context)
-        logger.info(f'context {query=}')
+        print('context',context)
         return context
     
-    def set_payload(self, userID: int, payload: str):
-        query = f'UPDATE user SET payload = "{payload}" WHERE id = {userID}'
+    def set_payload(self, userID: int, entity:str):
+        query = f'UPDATE user SET payload = "{entity}" WHERE id = {userID}'
         #print(query)
         def a(session):
             session.transaction(ydb.SerializableReadWrite()).execute(
@@ -193,9 +207,8 @@ class Ydb:
 
     def get_payload(self, whereID: int):
         query = f'SELECT payload FROM user WHERE id = {whereID}'
-        #print(query)
+        print(query)
 
-        logger.info(query)
         def a(session):
             return session.transaction().execute(
                 query,
@@ -212,9 +225,8 @@ class Ydb:
     def select_query(self,tableName: str, where: str):
         # 'where id > 20 '
         query = f'SELECT * FROM {tableName} WHERE {where}'
-        #print(query)
+        print(query)
 
-        logger.info(query)
         def a(session):
             return session.transaction().execute(
                 query,
@@ -225,8 +237,7 @@ class Ydb:
         # IndexError: list index out of range если нет данныйх
         #print('b',b)
         rez = b[0].rows
-        #print('rez',rez)
-        logger.info(f"rez select_auery {query=}")
+        print('rez',rez)
         return rez
 
 

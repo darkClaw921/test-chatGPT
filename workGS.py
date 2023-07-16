@@ -47,11 +47,15 @@ class Sheet():
     
     def get_gs_text(self):
         allText = ''
+        i =1
         for i in tqdm(range(2,118)):
+            #TODO удалить потом
+            if i == 2: 
+                return allText
             text = self.get_rom_value(i)
             time.sleep(1.2)
             allText += prepare_text(text)
-
+            i += 1
         return allText
 
 @dataclass

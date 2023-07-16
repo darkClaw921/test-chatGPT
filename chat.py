@@ -105,15 +105,15 @@ class GPT():
 
   #def answer(self, system, topic, temp = 1):    
   def answer(self, system, messages:list, temp = 1):    
-    """messages = [
+    message = [
       {"role": "system", "content": system},
-      {"role": "user", "content": topic}
+      #{"role": "user", "content": topic}
       ]
-    """
+    message.extend(messages)
     completion = openai.ChatCompletion.create(
       model=self.modelVersion,
       #model="gpt-3.5-turbo",
-      messages=messages,
+      messages=message,
       temperature=temp
       )
     logger.info(f'answer chat.py {completion.choices[0].message.content}')
