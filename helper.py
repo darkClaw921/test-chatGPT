@@ -1,4 +1,5 @@
-
+import re
+import telebot
 
 # any
 def slice_str(s:str,start:str, end:str):
@@ -32,3 +33,24 @@ def sum_dict_values(dict1, dict2):
             result[key] = dict2[key]
 
     return result
+
+def extract_id_from_url(url):
+    id_start_index = url.rfind('/') + 1
+    id_end_index = url.find('?') if '?' in url else len(url)
+    return url[id_start_index:id_end_index]
+
+def extract_url(text):
+    pattern = re.compile(r'(https?://\S+)')
+    match = pattern.search(text)
+    if match:
+        return match.group(1)
+    else:
+        return None
+    
+def create_media_gorup(lst:list):
+    media_group = telebot.types.MediaGroup()
+    for i in lst:
+        photo = open(i, 'rb')
+        media_group.attach_photo(photo)
+        
+    return media_group

@@ -22,7 +22,7 @@ TOKEN_JSON = '/Users/igorgerasimov/Python/Bitrix/test-chatGPT/client_secrets.jso
 #DOWNLOAD_PATH = 'путь_к_папке_для_сохранения'
 
 
-def download_files2(FOLDER_ID:str, maxFile:int = 5)-> list:
+def download_files(FOLDER_ID:str, maxFile:int = 5)-> list:
     """Скачивает файлы из папки в google drive
 
     Args:
@@ -63,4 +63,4 @@ def download_files2(FOLDER_ID:str, maxFile:int = 5)-> list:
 
 
 if __name__ == '__main__':
-    download_files2()
+    download_files()

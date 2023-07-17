@@ -14,6 +14,7 @@ import sys
 from createKeyboard import create_menu_keyboard
 from workBitrix import *
 from helper import *
+from workGDrive import *
 load_dotenv()
 
 
@@ -195,6 +196,21 @@ def any_message(message):
     print(f"{prepareAnswer.find('спасибо за предоставленный номер')=}") 
     b = prepareAnswer.find('спасибо за предоставленный номер') 
     print(f'{b=}')
+    photoFolder = answer.find('https') 
+    print(f'{photoFolder=}')
+    if photoFolder == 0:
+
+        urlExtract = extract_url(answer)
+        print(f'{urlExtract=}')
+        idExtract = extract_id_from_url(urlExtract)
+        print(f'{extract_id_from_url=}')
+        downloadFiles = download_files(idExtract)
+        print(f'{downloadFiles=}')
+        mediaGroup = create_media_gorup(download_files)
+        bot.send_media_group(message.chat.id, mediaGroup)
+        print('отправка сообщегия')
+
+    
     if b == 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)

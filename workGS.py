@@ -46,16 +46,17 @@ class Sheet():
         return self.sheet.row_values(i)
     
     def get_gs_text(self):
-        allText = ''
-        i =1
+        allText = '\n\n<Описание Проектов>'
+        b =1
         for i in tqdm(range(2,118)):
+            print(f'{b=}')
             #TODO удалить потом
-            if i == 2: 
+            if b == 2: 
                 return allText
             text = self.get_rom_value(i)
             time.sleep(1.2)
             allText += prepare_text(text)
-            i += 1
+            b += 1
         return allText
 
 @dataclass
@@ -74,11 +75,13 @@ class table:
     J :int = 9
     
 def prepare_text(lst:list):
+    text = ''
     try:
         lst[table.H]=lst[table.H].replace('\xa0', ' ')
         lst[table.I]=lst[table.I].replace('\xa0', ' ')
         lst[table.J]=lst[table.J].replace('\xa0', ' ')
-    except:
+    except Exception as e:
+        print('ошибка в GS prepare_text ',e)
         text = f"""
 <Проект: {lst[table.C]}>""" 
         return text
@@ -97,7 +100,10 @@ def prepare_text(lst:list):
 ЗК: {lst[table.H]}
 ТК: {lst[table.I]}
 ВО: {lst[table.J]}
+Фото проекта: {lst[table.C]}
+{lst[table.G]}
     """
+    print(f'{text=}')
     return text
 
 

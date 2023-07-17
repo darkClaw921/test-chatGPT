@@ -51,6 +51,7 @@ class GPT():
 
   def load_search_indexes(self, url: str) -> str:
     # Extract the document ID from the URL
+    print('попали в load_serch_index')
     match_ = re.search('/document/d/([a-zA-Z0-9-_]+)', url)
     if match_ is None:
         raise ValueError('Invalid Google Docs URL')
@@ -61,9 +62,10 @@ class GPT():
     response.raise_for_status()
     text = response.text
     gsText = sheet.get_gs_text()
-    print(f'{gsText}')
-    text = text + gsText
-    return self.create_embedding(text)
+    print(f'{gsText=}')
+    text1 = text + gsText
+    print(f'{text1=}')
+    return self.create_embedding(text1)
 
   def load_prompt(self, 
                   url: str) -> str:
