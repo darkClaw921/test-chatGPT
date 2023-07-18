@@ -8,6 +8,7 @@ load_dotenv()
 driver = ydb.Driver(
   endpoint=os.getenv('YDB_ENDPOINT'),
   database=os.getenv('YDB_DATABASE'),
+
   #credentials=ydb.iam.MetadataUrlCredentials(),)
   credentials=ydb.AccessTokenCredentials(os.getenv('YDB_CREDINTALS_TOKEN')))
   #credentials=ydb.iam.ServiceAccountCredentials.from_file(
@@ -156,10 +157,17 @@ class Ydb:
                 value1 = value1.replace('"',"'")    
             except:
                 1 + 0
-
+            
+            #TODO переделать под разные форматы
             value1 = truncate_string(str(value1), 2000)            
             if key == 'id':
                 value += f'{value1},'
+
+            elif key in ['all_token', 'all_messages', 'time_epoch', 'token',]:
+                value += f'{int(value1)},'
+            
+            elif key in ['token_price']:
+                value += f'{float(value1)},'
             else:
                 value += f'"{value1}",'
             

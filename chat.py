@@ -61,7 +61,9 @@ class GPT():
     response = requests.get(f'https://docs.google.com/document/d/{doc_id}/export?format=txt')
     response.raise_for_status()
     text = response.text
-    gsText = sheet.get_gs_text()
+    #для получения данных из таблицы
+    #gsText = sheet.get_gs_text()
+    gsText = ''
     print(f'{gsText=}')
     text1 = text + gsText
     print(f'{text1=}')
@@ -107,19 +109,22 @@ class GPT():
 
   #def answer(self, system, topic, temp = 1):    
   def answer(self, system, messages:list, temp = 1):    
-    message = [
+    """messages = [
       {"role": "system", "content": system},
-      #{"role": "user", "content": topic}
+      {"role": "user", "content": topic}
       ]
-    message.extend(messages)
+    """
     completion = openai.ChatCompletion.create(
-      model=self.modelVersion,
       #model="gpt-3.5-turbo",
-      messages=message,
+      model=self.modelVersion,
+      messages=messages,
       temperature=temp
       )
-    logger.info(f'answer chat.py {completion.choices[0].message.content}')
-    return completion.choices[0].message.content
+    allToken = f'{completion["usage"]["total_tokens"]} токенов использовано всего (вопрос-ответ).'
+    allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
+    #return f'{completion.choices[0].message.content}\n\n{allToken}\n{allTokenPrice}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
+    return f'{completion.choices[0].message.content}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
+
 
   def num_tokens_from_messages(self, messages, model="gpt-3.5-turbo-0301"):
     """Returns the number of tokens used by a list of messages."""
@@ -189,7 +194,12 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     print('ОТВЕТ : \n', self.insert_newlines(completion.choices[0].message.content))
 
     answer = completion.choices[0].message.content
-    return answer
+    allToken = f'{completion["usage"]["total_tokens"]} токенов использовано всего (вопрос-ответ).'
+    allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
+    
+    return f'{answer}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
+
+#    return answer
   
   def get_summary(self, history:list, 
                   promtMessage = 'Write a concise summary of the following and CONCISE SUMMARY IN RUSSIAN:',

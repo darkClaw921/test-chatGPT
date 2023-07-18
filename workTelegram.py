@@ -84,9 +84,11 @@ def add_new_model(message):
 
 @bot.message_handler(commands=['help', 'start'])
 def say_welcome(message):
+    username = message.from_user.username
     row = {'id': 'Uint64', 'MODEL_DIALOG': 'String', 'TEXT': 'String'}
     sql.create_table(str(message.chat.id), row)
-    row = {'id': message.chat.id, 'payload': '',}
+    #row = {'id': message.chat.id, 'payload': '',}
+    row = {'id': message.chat.id, 'model': '', 'promt': '','nicname':username, 'payload': ''}
     sql.replace_query('user', row)
     
     text = """Здравствуйте, я AI ассистент компании Сканди ЭкоДом. Я отвечу на Ваши вопросы по поводу строительства загородного дома и задам свои 😁. Хотите я Вам расскажу про варианты комплектации домов?
@@ -157,7 +159,7 @@ def any_message(message):
     #answer = gpt.answer_index(model, text, model_index,)
     
     try:
-        answer = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=1)
+        answer, allToken, allTokenPrice = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=1)
         logger.info(f'ответ сети если нет ощибок: {answer}')
         #print('мы получили ответ \n', answer)
     except Exception as e:
@@ -179,7 +181,8 @@ def any_message(message):
         logger.info(f'история после summary {history}')
         #print('история после очистки\n', history)
         
-        answer = gpt.answer_index(model, text, history, model_index,temp=0.2, verbose=1)
+        #answer = gpt.answer_index(model, text, history, model_index,temp=0.2, verbose=1)
+        answer, allToken, allTokenPrice = gpt.answer_index(model, text, history, model_index,temp=0.2, verbose=1)
         bot.send_message(message.chat.id, answer)
         add_message_to_history(userID, 'assistant', answer)
 
@@ -225,14 +228,36 @@ def any_message(message):
         update_deal(phone, history_answer) 
     bot.send_message(message.chat.id, answer)
     #if payload == 'model3':
-    rows = {'id': time_epoch(),
+    now = datetime.now()
+# Format the date and time according to the desired format
+    formatted_date = now.strftime("%Y-%m-%dT%H:%M:%S")
+    
+    #answer, allToken, allTokenPrice= gpt.answer(' ',mess,)
+    row = {'all_price': float(allTokenPrice), 'all_token': int(allToken), 'all_messages': 1}
+    sql.plus_query_user('user', row, f"id={userID}")
+    
+    username = message.from_user.username
+    rows = {'time_epoch': time_epoch(),
             'MODEL_DIALOG': payload,
-            'TEXT': f'клиент: {text}'}
-    sql.insert_query(userID,  rows)
+            'date': formatted_date,
+            'id': userID,
+            'nicname': username,
+            #'token': username,
+            #'token_price': username,
+            'TEXT': f'Клиент: {text}'}
+    sql.insert_query('all_user_dialog',  rows)
+    
+    rows = {'time_epoch': time_epoch(),
+            'MODEL_DIALOG': payload,
+            'date': formatted_date,
+            'id': userID,
+            'nicname': username,
+            'token': allToken,
+            'token_price': allTokenPrice,
+            'TEXT': f'Менеджер: {answer}'}
+    sql.insert_query('all_user_dialog',  rows)
 
-    rows = {'id': time_epoch()+1,
-            'MODEL_DIALOG': payload,
-            'TEXT': f'менеджер: {answer}'}
-    sql.insert_query(userID,  rows)
+
+    
 
 bot.infinity_polling()
