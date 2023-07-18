@@ -1,27 +1,22 @@
 import os
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+import io
 from googleapiclient.discovery import build
-import requests
+from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
+from googleapiclient.http import MediaIoBaseDownload
+from dotenv import load_dotenv
 
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
-# Установка разрешений для доступа к Google Drive API
-SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+load_dotenv()
+# Установка облачного хранилища
+api_key = os.getenv('api_key_google_drive')
+service_account_file = 'GDtxt.json'
+credentials = service_account.Credentials.from_service_account_file(service_account_file)
+drive = build('drive', 'v3', credentials=credentials)
 
-# ID папки, из которой вы хотите скачать файлы
-FOLDER_ID = ''
+# ID папки в Google Drive
+#folder_id = '1H7rj0sO_jNtd1NbsHhxJDh5VYBuxyHjj'
 
-# Определение пути, в который будут загружены файлы
-
-DOWNLOAD_PATH = '/Users/igorgerasimov/Python/Bitrix/test-chatGPT/'
-#TOKEN_JSON = 'kgtaprojects-8706cc47a185.json'
-TOKEN_JSON = '/Users/igorgerasimov/Python/Bitrix/test-chatGPT/client_secrets.json'
-
-# Путь к папке, в которую будут загружены файлы
-#DOWNLOAD_PATH = 'путь_к_папке_для_сохранения'
-
-
+# Получение списка файлов в папке
 def download_files(FOLDER_ID:str, maxFile:int = 5)-> list:
     """Скачивает файлы из папки в google drive
 
@@ -32,35 +27,37 @@ def download_files(FOLDER_ID:str, maxFile:int = 5)-> list:
     Returns:
         list: список имен скаченных файлов
     """
-    # Аутентификация пользователя
-    filesDownload = []
-    gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
-    drive = GoogleDrive(gauth)
 
-    # ID папки, из которой вы хотите скачать файлы
-    folder_id = FOLDER_ID
+    results = drive.files().list(q=f"'{FOLDER_ID}' in parents", pageSize=20).execute()
+    items = results.get('files', [])
+    print(items)
+    # Создание папки для скачивания файлов
+    download_folder = 'downloads'
+    if not os.path.exists(download_folder):
+        os.makedirs(download_folder)
 
-    # Запрос списка файлов из заданной папки
-    file_list = drive.ListFile({'q': f"'{folder_id}' in parents and trashed=false"}).GetList()
-    #maxFile = 5
     # Скачивание файлов
-    for index, file in enumerate(file_list):
-        # Определение пути и имени файла
-        file_path = os.path.join(DOWNLOAD_PATH, file['title'])
+    file_list = []
 
-        # Скачивание файла
-        file.GetContentFile(file_path)
-        filesDownload.append(file['title'])
-        print(f"Скачивание файла {file['title']} завершено")
-        
-        if index == maxFile-1:
-            return filesDownload
+    for i, item in enumerate(items):
+        file_id = item['id']
+        file_name = os.path.join(download_folder, item['name'])
 
-    print("Скачивание файлов завершено!")
-    return filesDownload
+        request = drive.files().get_media(fileId=file_id)
+        fh = io.FileIO(file_name, mode='wb')
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
 
+        while not done:
+            status, done = downloader.next_chunk()
 
+        print(f'Successfully downloaded file: {file_name}')
+        file_list.append(file_name)
+        if i == maxFile-1:
+            return file_list
+
+    print('All files downloaded successfully.')
+    return file_list
 
 if __name__ == '__main__':
-    download_files()
+    pass

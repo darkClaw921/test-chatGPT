@@ -43,7 +43,7 @@ def extract_url(text):
     pattern = re.compile(r'(https?://\S+)')
     match = pattern.search(text)
     if match:
-        return match.group(1)
+        return match.group(1).replace(')','')
     else:
         return None
     

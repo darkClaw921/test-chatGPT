@@ -1,7 +1,7 @@
 import os
 import random
 import telebot
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from pprint import pprint
 from chat import GPT
@@ -201,7 +201,7 @@ def any_message(message):
     print(f'{b=}')
     photoFolder = answer.find('https') 
     print(f'{photoFolder=}')
-    if photoFolder == 0:
+    if photoFolder > 0:
 
         urlExtract = extract_url(answer)
         print(f'{urlExtract=}')
@@ -214,7 +214,7 @@ def any_message(message):
         print('отправка сообщегия')
 
     
-    if b == 0:
+    if b > 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
         history = get_history(str(userID)) 
@@ -228,7 +228,8 @@ def any_message(message):
         update_deal(phone, history_answer) 
     bot.send_message(message.chat.id, answer)
     #if payload == 'model3':
-    now = datetime.now()
+    now = datetime.now()+timedelta(hours=3)
+    #now = datetime.now()
 # Format the date and time according to the desired format
     formatted_date = now.strftime("%Y-%m-%dT%H:%M:%S")
     
