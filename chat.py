@@ -62,8 +62,8 @@ class GPT():
     response.raise_for_status()
     text = response.text
     #для получения данных из таблицы
-    #gsText = sheet.get_gs_text()
-    gsText = ''
+    gsText = sheet.get_gs_text()
+    #gsText = ''
     print(f'{gsText=}')
     text1 = text + gsText
     print(f'{text1=}')

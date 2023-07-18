@@ -15,6 +15,7 @@ from createKeyboard import create_menu_keyboard
 from workBitrix import *
 from helper import *
 from workGDrive import *
+from telebot.types import InputMediaPhoto
 load_dotenv()
 
 
@@ -201,7 +202,7 @@ def any_message(message):
     print(f'{b=}')
     photoFolder = answer.find('https') 
     print(f'{photoFolder=}')
-    if photoFolder > 0:
+    if photoFolder >= 0:
 
         urlExtract = extract_url(answer)
         print(f'{urlExtract=}')
@@ -209,12 +210,17 @@ def any_message(message):
         print(f'{extract_id_from_url=}')
         downloadFiles = download_files(idExtract)
         print(f'{downloadFiles=}')
-        mediaGroup = create_media_gorup(download_files)
-        bot.send_media_group(message.chat.id, mediaGroup)
+        media_group = []
+        for photo in downloadFiles:
+            media_group.append(InputMediaPhoto(open(photo, 'rb'),
+                                       caption = photo))
+        #mediaGroup = create_media_gorup(download_files)
+        #bot.send_media_group(message.chat.id, mediaGroup)
+        bot.send_media_group(message.chat.id, media_group)
         print('отправка сообщегия')
 
     
-    if b > 0:
+    if b >= 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
         history = get_history(str(userID)) 
