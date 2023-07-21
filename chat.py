@@ -108,12 +108,18 @@ class GPT():
     return search_index
 
   #def answer(self, system, topic, temp = 1):    
-  def answer(self, system, messages:list, temp = 1):    
+  def answer(self, system, topic:list, temp = 1):
     """messages = [
       {"role": "system", "content": system},
       {"role": "user", "content": topic}
       ]
     """
+    messages = [
+      {"role": "system", "content": system },
+      #{"role": "user", "content": topic}
+      #{"role": "user", "content": context}
+      ]
+    messages.extend(topic)
     completion = openai.ChatCompletion.create(
       #model="gpt-3.5-turbo",
       model=self.modelVersion,
@@ -124,7 +130,6 @@ class GPT():
     allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
     #return f'{completion.choices[0].message.content}\n\n{allToken}\n{allTokenPrice}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
     return f'{completion.choices[0].message.content}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
-
 
   def num_tokens_from_messages(self, messages, model="gpt-3.5-turbo-0301"):
     """Returns the number of tokens used by a list of messages."""

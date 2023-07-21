@@ -18,11 +18,11 @@ def deal_history():
     dealHist = bit.call("crm.stagehistory.list", row)
     pprint(dealHist)
 
-def create_deal(items:dict):
-    dealID = bit.call('crm.deal.add', items=items)
+def create_lead(items:dict):
+    dealID = bit.call('crm.lead.add', items=items)
     return dealID
 
-def update_deal(phone:str, text:str):
+def update_deal(phone:str, text:str, nicname:str = 'Клиент из Telegram'):
     phone = phone.replace('8','+7',1)
     leads = bit.get_all(
     'crm.lead.list',
@@ -30,10 +30,15 @@ def update_deal(phone:str, text:str):
         #'select': ['*', 'UF_*'],
         'filter': {'PHONE': phone}
     })
+    logger.info(f'{len(leads)=}')
     if len(leads) >= 1:
         params = {"ID": leads[0]['ID'], "fields": {"UF_CRM_1689546544": text}}
         bit.call('crm.lead.update', params, raw=True)
-
+    else:
+        params = {"NAME": nicname, 
+                  "fields": {"UF_CRM_1689546544": text},
+                  "PHONE":[{ "VALUE": phone, "VALUE_TYPE": "WORK" }]}
+        create_lead(params)
 # добавить комментарий к задаче
     print(f'{leads=}')
     pass

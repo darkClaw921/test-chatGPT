@@ -223,15 +223,17 @@ def any_message(message):
     if b >= 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
-        history = get_history(str(userID)) 
-        history_answer = gpt.answer(PROMT_SUMMARY,history)
+        history = get_history(str(userID))
+        history_answer = gpt.answer(PROMT_SUMMARY,history)[0]
         print(f'{history_answer=}')
-        bot.send_message(message.chat.id, answer) 
+        print(f'{answer=}')
+        bot.send_message(message.chat.id, answer)
         phone = slice_str_phone(history_answer)
         pprint(f"{phone=}")
         
         print('запиь в битрикс')
-        update_deal(phone, history_answer) 
+        update_deal(phone, history_answer)
+        
     bot.send_message(message.chat.id, answer)
     #if payload == 'model3':
     now = datetime.now()+timedelta(hours=3)
