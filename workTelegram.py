@@ -220,7 +220,8 @@ def any_message(message):
         print('отправка сообщегия')
         answer = answer
         answer = re.sub(r'\[.*?\]\(.*?\)', '', answer).replace(' ссылка на', '')
-    
+        answer = remove_empty_lines(answer)
+        
     if b >= 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
@@ -228,7 +229,7 @@ def any_message(message):
         history_answer = gpt.answer(PROMT_SUMMARY,history)[0]
         print(f'{history_answer=}')
         print(f'{answer=}')
-        bot.send_message(message.chat.id, answer)
+        #bot.send_message(message.chat.id, answer)
         phone = slice_str_phone(history_answer)
         pprint(f"{phone=}")
         

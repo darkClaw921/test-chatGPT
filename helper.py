@@ -2,6 +2,13 @@ import re
 import telebot
 from loguru import logger
 # any
+
+def remove_empty_lines(text):
+    lines = text.splitlines()  # Разделение текста на отдельные строки
+    stripped_lines = (line.strip() for line in lines)  # Удаление начальных и конечных пробелов
+    non_empty_lines = (line for line in stripped_lines if line)  # Отбор только непустых строк
+    return "\n".join(non_empty_lines) 
+
 def slice_str(s:str,start:str, end:str):
     a = s.find(start)
     print(a)
