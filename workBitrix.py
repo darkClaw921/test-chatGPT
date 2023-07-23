@@ -2,6 +2,7 @@ from fast_bitrix24  import Bitrix
 from dotenv import load_dotenv
 import os
 from pprint import pprint
+from loguru import logger
 load_dotenv()
 webHook = os.environ.get('webHook')
 bit = Bitrix(webHook)
@@ -19,7 +20,7 @@ def deal_history():
     pprint(dealHist)
 
 def create_lead(items:dict):
-    dealID = bit.call('crm.lead.add', items=items)
+    dealID = bit.call('crm.lead.add', items=items,raw=True)
     return dealID
 
 def update_deal(phone:str, text:str, nicname:str = 'Клиент из Telegram'):
@@ -36,8 +37,8 @@ def update_deal(phone:str, text:str, nicname:str = 'Клиент из Telegram')
         bit.call('crm.lead.update', params, raw=True)
     else:
         params = {"NAME": nicname, 
-                  "fields": {"UF_CRM_1689546544": text},
-                  "PHONE":[{ "VALUE": phone, "VALUE_TYPE": "WORK" }]}
+                  "fields": {"UF_CRM_1689546544": text,
+                             "PHONE":[{ "VALUE": phone, "VALUE_TYPE": "WORK" }]}}
         create_lead(params)
 # добавить комментарий к задаче
     print(f'{leads=}')
@@ -45,5 +46,10 @@ def update_deal(phone:str, text:str, nicname:str = 'Клиент из Telegram')
 
 def create_contact():
     pass
-
+#phone = '+79308316655'
+#params = {"NAME": 'nicname', 
+#                  "fields": {"UF_CRM_1689546544": 'text',
+#                             "PHONE":[{'VALUE': phone, 'VALUE_TYPE': 'WORK'}]}}
+                  
+#create_lead(params)
 #deal_history()

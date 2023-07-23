@@ -216,9 +216,10 @@ def any_message(message):
                                        caption = photo))
         #mediaGroup = create_media_gorup(download_files)
         #bot.send_media_group(message.chat.id, mediaGroup)
-        bot.send_media_group(message.chat.id, media_group)
+        bot.send_media_group(message.chat.id, media_group,)
         print('отправка сообщегия')
-
+        answer = answer
+        answer = re.sub(r'\[.*?\]\(.*?\)', '', answer).replace(' ссылка на', '')
     
     if b >= 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
@@ -233,8 +234,8 @@ def any_message(message):
         
         print('запиь в битрикс')
         update_deal(phone, history_answer)
-        
-    bot.send_message(message.chat.id, answer)
+
+    bot.send_message(message.chat.id, answer,  parse_mode='markdown')
     #if payload == 'model3':
     now = datetime.now()+timedelta(hours=3)
     #now = datetime.now()

@@ -49,10 +49,10 @@ class Sheet():
         allText = '\n\n<Описание Проектов>'
         b =1
         for i in tqdm(range(2,118)):
-            print(f'{b=}')
+            #print(f'{b=}')
             #TODO удалить потом
-            if b == 2: 
-                return allText
+            #if b == 2: 
+            #    return allText
             text = self.get_rom_value(i)
             time.sleep(1.2)
             allText += prepare_text(text)
