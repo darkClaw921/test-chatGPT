@@ -203,25 +203,27 @@ def any_message(message):
     photoFolder = answer.find('https') 
     print(f'{photoFolder=}')
     if photoFolder >= 0:
+        try:
+            urlExtract = extract_url(answer)
+            print(f'{urlExtract=}')
+            idExtract = extract_id_from_url(urlExtract)
+            print(f'{extract_id_from_url=}')
+            downloadFiles = download_files(idExtract)
+            print(f'{downloadFiles=}')
+            media_group = []
+            for photo in downloadFiles:
+                media_group.append(InputMediaPhoto(open(photo, 'rb'),
+                                        caption = photo))
+            #mediaGroup = create_media_gorup(download_files)
+            #bot.send_media_group(message.chat.id, mediaGroup)
+            bot.send_media_group(message.chat.id, media_group,)
+            print('отправка сообщегия')
+            answer = answer
+            answer = re.sub(r'\[.*?\]\(.*?\)', '', answer).replace(' ссылка на', '')
+            answer = remove_empty_lines(answer)
+        except:
+            answer = 'Извините сейчас не могу найти актуальную ссылку'
 
-        urlExtract = extract_url(answer)
-        print(f'{urlExtract=}')
-        idExtract = extract_id_from_url(urlExtract)
-        print(f'{extract_id_from_url=}')
-        downloadFiles = download_files(idExtract)
-        print(f'{downloadFiles=}')
-        media_group = []
-        for photo in downloadFiles:
-            media_group.append(InputMediaPhoto(open(photo, 'rb'),
-                                       caption = photo))
-        #mediaGroup = create_media_gorup(download_files)
-        #bot.send_media_group(message.chat.id, mediaGroup)
-        bot.send_media_group(message.chat.id, media_group,)
-        print('отправка сообщегия')
-        answer = answer
-        answer = re.sub(r'\[.*?\]\(.*?\)', '', answer).replace(' ссылка на', '')
-        answer = remove_empty_lines(answer)
-        
     if b >= 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
