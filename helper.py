@@ -108,8 +108,9 @@ def download_photo(message_content, URL_USERS, userID):
         print(f'{downloadFiles=}')
         media_group = []
         for photo in downloadFiles:
-            path = '/Users/igorgerasimov/Python/Bitrix/test-chatGPT'
-            media_group.append(InputMediaPhoto(open(f'{path}/{photo}', 'rb'),
+            #path = '/Users/igorgerasimov/Python/Bitrix/test-chatGPT'
+            media_group.append(InputMediaPhoto(open(f'{photo}', 'rb'),
+            #media_group.append(InputMediaPhoto(open(f'{path}/{photo}', 'rb'),
                                     caption = photo))
         #mediaGroup = create_media_gorup(download_files)
         #bot.send_media_group(message.chat.id, mediaGroup)
