@@ -51,8 +51,8 @@ class Sheet():
         for i in tqdm(range(2,118)):
             #print(f'{b=}')
             #TODO удалить потом
-            #if b == 2: 
-            #    return allText
+            if b == 5: 
+                return allText
             text = self.get_rom_value(i)
             time.sleep(1.2)
             allText += prepare_text(text)
@@ -100,7 +100,7 @@ def prepare_text(lst:list):
 ЗК: {lst[table.H]}
 ТК: {lst[table.I]}
 ВО: {lst[table.J]}
-Фото проекта: {lst[table.C]}
+Фото проекта:{lst[table.C]}
 {lst[table.G]}
     """
     print(f'{text=}')

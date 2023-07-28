@@ -64,9 +64,9 @@ class GPT():
     #для получения данных из таблицы
     gsText = sheet.get_gs_text()
     #gsText = ''
-    print(f'{gsText=}')
+    #print(f'{gsText=}')
     text1 = text + gsText
-    print(f'{text1=}')
+    #print(f'{text1=}')
     return self.create_embedding(text1)
 
   def load_prompt(self, 
@@ -93,7 +93,7 @@ class GPT():
 
     source_chunks = []
     #splitter = CharacterTextSplitter(separator="\n", chunk_size=1524, chunk_overlap=0)
-    splitter = CharacterTextSplitter(separator="<", chunk_size=2300, chunk_overlap=300)
+    splitter = CharacterTextSplitter(separator="<", chunk_size=1024, chunk_overlap=300)
 
     for chunk in splitter.split_text(data):
       source_chunks.append(Document(page_content=chunk, metadata={}))
@@ -169,14 +169,15 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
   def answer_index(self, system, topic, history:list, search_index, temp = 1, verbose = 0):
     
     #Выборка документов по схожести с вопросом 
-    docs = search_index.similarity_search(topic, k=3)
+    docs = search_index.similarity_search(topic, k=4)
     if (verbose): print('\n ===========================================: ')
     message_content = re.sub(r'\n{2}', ' ', '\n '.join([f'\nОтрывок документа №{i+1}\n=====================' + doc.page_content + '\n' for i, doc in enumerate(docs)]))
     if (verbose): print('message_content :\n ======================================== \n', message_content)
 
+    systemMess = 'Данные, на основании которых нужно продолжить диалог:'
     messages = [
-      {"role": "system", "content": system + f"{message_content}"},
-      #{"role": "user", "content": topic}
+      {"role": "system", "content": system + f"{systemMess} {message_content}"},
+      {"role": "user", "content": 'Диалог с клиентом, который нужно продолжить:'},
       #{"role": "user", "content": context}
       ]
     messages.extend(history)
@@ -199,16 +200,16 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     print('ОТВЕТ : \n', self.insert_newlines(completion.choices[0].message.content))
 
     answer = completion.choices[0].message.content
-    allToken = f'{completion["usage"]["total_tokens"]} токенов использовано всего (вопрос-ответ).'
-    allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
+    #allToken = f'{completion["usage"]["total_tokens"]} токенов использовано всего (вопрос-ответ).'
+    #allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
     
-    return f'{answer}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
+    return f'{answer}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000), docs[0].page_content
 
 #    return answer
   
   def get_summary(self, history:list, 
                   promtMessage = 'Write a concise summary of the following and CONCISE SUMMARY IN RUSSIAN:',
-                  temp = 1):    
+                  temp = 0.3):    
     """messages = [
       {"role": "system", "content": system},
       {"role": "user", "content": topic}
@@ -232,9 +233,29 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     logger.info(f'{completion["usage"]=}')
     answer =completion.choices[0].message.content  
     logger.info(answer)
-    roleAsnwer= {'role': 'system', 'content': answer}
+    roleAsnwer= {'role': 'user', 'content': answer}
     return roleAsnwer
   
+  def summarize_questions(self,history:list):
+    # Применяем модель gpt-3.5-turbo-0613 для саммаризации вопросов
+    messages = [
+        {"role": "system", "content": "Ты - ассистент компании, основанный на AI. Ты умеешь профессионально суммаризировать присланные тебе диалоги менеджера и клиента. Твоя задача - суммаризировать диалог, который тебе пришел."},
+        {"role": "user", "content": "Суммаризируй следующий диалог менеджера и клиента: "}
+    ]
+    #messages.extend(history[:-1])
+    messages.extend(history)
+
+    completion = openai.ChatCompletion.create(
+        model=self.modelVersion,
+        messages=messages,
+        temperature=0.3,  # Используем более низкую температуру для более определенной суммаризации
+        #max_tokens=1000  # Ограничиваем количество токенов для суммаризации
+    )
+    answer = completion.choices[0].message.content
+    logger.info(f'Саммари диалога: {answer}')
+    roleAsnwer= {'role': 'user', 'content': answer}
+    return roleAsnwer
+
   def get_chatgpt_ansver3(self, system, topic, search_index, temp = 1):
     
     messages = [

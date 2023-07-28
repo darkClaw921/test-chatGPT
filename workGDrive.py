@@ -10,6 +10,7 @@ load_dotenv()
 # Установка облачного хранилища
 api_key = os.getenv('api_key_google_drive')
 service_account_file = 'GDtxt.json'
+#service_account_file = '/Users/igorgerasimov/Python/Bitrix/test-chatGPT/GDtxt.json'
 credentials = service_account.Credentials.from_service_account_file(service_account_file)
 drive = build('drive', 'v3', credentials=credentials)
 

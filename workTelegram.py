@@ -16,6 +16,7 @@ from workBitrix import *
 from helper import *
 from workGDrive import *
 from telebot.types import InputMediaPhoto
+from workRedis import *
 load_dotenv()
 
 
@@ -30,7 +31,8 @@ sql = workYDB.Ydb()
 #expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/edit?usp=sharing')
 #answer = gpt.answer(expert_promt, 
 #           'Я хочу, чтобы после завершения обучения мне подобрали работу')
-r = redis.Redis(host='localhost', port=6379, decode_responses=False)
+URL_USERS = {}
+#r = redis.Redis(host='localhost', port=6379, decode_responses=False)
 #print(answer)
 MODEL_URL= 'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing'
 model_index=gpt.load_search_indexes(MODEL_URL)
@@ -42,39 +44,39 @@ PROMT_URL_SUMMARY ='https://docs.google.com/document/d/1XhSDXvzNKA9JpF3QusXtgMnp
 #    'model2': 'https://docs.google.com/document/d/1deHxH4rTpuJLJ0fnvsWJe8RwFbpju0-hVLLqklnlAL4/edit?usp=sharing'
 #}
 
-def time_epoch():
-    from time import mktime
-    dt = datetime.now()
-    sec_since_epoch = mktime(dt.timetuple()) + dt.microsecond/1000000.0
+# def time_epoch():
+#     from time import mktime
+#     dt = datetime.now()
+#     sec_since_epoch = mktime(dt.timetuple()) + dt.microsecond/1000000.0
 
-    millis_since_epoch = sec_since_epoch * 1000
-    return int(millis_since_epoch)
+#     millis_since_epoch = sec_since_epoch * 1000
+#     return int(millis_since_epoch)
 
-def get_model_url(modelName: str):
-    modelUrl = sql.select_query('model', f'model = "{modelName}"')[0]['url']
-    logger.info(f'get_model_url {modelUrl}')
-    #print('a', modelUrl)
-    return modelUrl.decode('utf-8')
+# def get_model_url(modelName: str):
+#     modelUrl = sql.select_query('model', f'model = "{modelName}"')[0]['url']
+#     logger.info(f'get_model_url {modelUrl}')
+#     #print('a', modelUrl)
+#     return modelUrl.decode('utf-8')
 
-def add_message_to_history(userID:str, role:str, message:str):
-    mess = {'role': role, 'content': message}
-    r.lpush(userID, json.dumps(mess))
+# def add_message_to_history(userID:str, role:str, message:str):
+#     mess = {'role': role, 'content': message}
+#     r.lpush(userID, json.dumps(mess))
 
-def get_history(userID:str):
-    items = r.lrange(userID, 0, -1)
-    history = [json.loads(m.decode("utf-8")) for m in items[::-1]]
-    return history
+# def get_history(userID:str):
+#     items = r.lrange(userID, 0, -1)
+#     history = [json.loads(m.decode("utf-8")) for m in items[::-1]]
+#     return history
 
-def add_old_history(userID:str, history:list):
-    his = history.copy()
-    clear_history(userID)
-    for i in his:
-        mess = i
-        r.lpush(userID, json.dumps(mess))
+# def add_old_history(userID:str, history:list):
+#     his = history.copy()
+#     clear_history(userID)
+#     for i in his:
+#         mess = i
+#         r.lpush(userID, json.dumps(mess))
 
 
-def clear_history(userID:str):
-    r.delete(userID)
+# def clear_history(userID:str):
+#     r.delete(userID)
 
 @bot.message_handler(commands=['addmodel'])
 def add_new_model(message):
@@ -129,9 +131,10 @@ def dialog_model1(message):
     sql.set_payload(message.chat.id, 'model1')
     bot.send_message(message.chat.id,'Что вы хотите узнать?',)
 
-@logger.catch
 @bot.message_handler(content_types=['text'])
+@logger.catch
 def any_message(message):
+    global URL_USERS
     #print('это сообщение', message)
     #text = message.text.lower()
     text = message.text
@@ -158,24 +161,33 @@ def any_message(message):
     #model= gpt.load_prompt(get_model_url(payload))
     #answer = gpt.answer(model, text, temp = 0.1)
     #answer = gpt.answer_index(model, text, model_index,)
-    
     try:
-        answer, allToken, allTokenPrice = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=1)
+        logger.info(f'{PROMT_URL}')
+        model= gpt.load_prompt(PROMT_URL) 
+    except:
+        model= gpt.load_prompt(PROMT_URL) 
+
+    lastMessage = history[-1]['content']
+    try:
+        if text == 'aabb':
+            raise 'hello'
+        answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=1)
         logger.info(f'ответ сети если нет ощибок: {answer}')
         #print('мы получили ответ \n', answer)
     except Exception as e:
         #bot.send_message(userID, e)
         #bot.send_message(userID, 'начинаю sammury: ответ может занять больше времени, но не более 3х минут')
         history = get_history(str(userID))
-        summaryHistory = gpt.get_summary(history)
-
-        logger.info(f'summary истории {summaryHistory}')
+        #summaryHistory = gpt.get_summary(history)
+        summaryHistory1 = gpt.summarize_questions(history)
+        logger.info(f'summary истории1 {summaryHistory1}')
+        #logger.info(f'summary истории {summaryHistory}')
         #print(f'summary: {summaryHistory}')
-        logger.info(f'история до summary {history}')
+        #logger.info(f'история до summary {history}')
         #print('история до очистки \n', history)
         #print('история summary \n', summaryHistory)
         #clear_history(userID)
-        history = [summaryHistory]
+        history = [summaryHistory1]
         history.extend([{'role':'user', 'content': text}])
         add_old_history(userID,history)
         history = get_history(str(userID))
@@ -183,11 +195,13 @@ def any_message(message):
         #print('история после очистки\n', history)
         
         #answer = gpt.answer_index(model, text, history, model_index,temp=0.2, verbose=1)
-        answer, allToken, allTokenPrice = gpt.answer_index(model, text, history, model_index,temp=0.2, verbose=1)
+        answer, allToken, allTokenPrice = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=1)
         bot.send_message(message.chat.id, answer)
         add_message_to_history(userID, 'assistant', answer)
 
         return 0 
+    
+    #if message_content 
     #answer, answerBlock = gpt.answer_index(model, context, model_index, verbose=1)
     #print('answer_index', answer)
     add_message_to_history(userID, 'assistant', answer)
@@ -196,34 +210,24 @@ def any_message(message):
     #for i in answerBlock:
     #    bot.send_message(message.chat.id, i)
     prepareAnswer= answer.lower()
-    print(f'{prepareAnswer=}')
-    print(f"{prepareAnswer.find('спасибо за предоставленный номер')=}") 
+    #print(f'{prepareAnswer=}')
+    #print(f"{prepareAnswer.find('спасибо за предоставленный номер')=}") 
     b = prepareAnswer.find('спасибо за предоставленный номер') 
     print(f'{b=}')
-    photoFolder = answer.find('https') 
+    logger.info(f'{message_content=}')
+    photoFolder = message_content.find('https://drive') 
     print(f'{photoFolder=}')
+    bot.send_message(message.chat.id, answer,  parse_mode='markdown')
+    
     if photoFolder >= 0:
+        logger.info(f'{URL_USERS=}')
+        URL_USERS, media_group = download_photo(message_content,URL_USERS,userID)
+        bot.send_message(message.chat.id, 'Подождите, ищу фото проекта...',  parse_mode='markdown')
         try:
-            urlExtract = extract_url(answer)
-            print(f'{urlExtract=}')
-            idExtract = extract_id_from_url(urlExtract)
-            print(f'{extract_id_from_url=}')
-            downloadFiles = download_files(idExtract)
-            print(f'{downloadFiles=}')
-            media_group = []
-            for photo in downloadFiles:
-                media_group.append(InputMediaPhoto(open(photo, 'rb'),
-                                        caption = photo))
-            #mediaGroup = create_media_gorup(download_files)
-            #bot.send_media_group(message.chat.id, mediaGroup)
             bot.send_media_group(message.chat.id, media_group,)
-            print('отправка сообщегия')
-            answer = answer
-            answer = re.sub(r'\[.*?\]\(.*?\)', '', answer).replace(' ссылка на', '')
-            answer = remove_empty_lines(answer)
-        except:
-            answer = 'Извините сейчас не могу найти актуальную ссылку'
-
+        except Exception as e:
+            bot.send_message(message.chat.id, 'Извините, не могу найти актуальные фото',  parse_mode='markdown') 
+            bot.send_message(message.chat.id, e,  parse_mode='markdown')
     if b >= 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
@@ -238,7 +242,11 @@ def any_message(message):
         print('запиь в битрикс')
         update_deal(phone, history_answer)
 
-    bot.send_message(message.chat.id, answer,  parse_mode='markdown')
+    #try:
+    #    bot.send_media_group(message.chat.id, media_group)
+    #except Exception as e:
+    #    bot.send_message(message.chat.id, e,  parse_mode='markdown')
+
     #if payload == 'model3':
     now = datetime.now()+timedelta(hours=3)
     #now = datetime.now()

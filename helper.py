@@ -1,7 +1,24 @@
 import re
 import telebot
 from loguru import logger
+#import datetime 
+from datetime import datetime
+from workGDrive import *
+from telebot.types import InputMediaPhoto
 # any
+def time_epoch():
+    from time import mktime
+    dt = datetime.now()
+    sec_since_epoch = mktime(dt.timetuple()) + dt.microsecond/1000000.0
+
+    millis_since_epoch = sec_since_epoch * 1000
+    return int(millis_since_epoch)
+
+def get_model_url(modelName: str):
+    modelUrl = sql.select_query('model', f'model = "{modelName}"')[0]['url']
+    logger.info(f'get_model_url {modelUrl}')
+    #print('a', modelUrl)
+    return modelUrl.decode('utf-8')
 
 def remove_empty_lines(text):
     lines = text.splitlines()  # Разделение текста на отдельные строки
@@ -63,3 +80,45 @@ def create_media_gorup(lst:list):
         media_group.attach_photo(photo)
         
     return media_group
+
+#Google Drive 
+@logger.catch
+def download_photo(message_content, URL_USERS, userID):
+    urlExtract = extract_url(message_content)
+    logger.info(f'{urlExtract=}')
+    #logger.info(f'{URL_USERS[userID]=}')
+    
+    try:
+        if URL_USERS == {}:
+        
+            URL_USERS.setdefault(userID,[urlExtract])
+        else: 
+            if urlExtract in URL_USERS[userID]:
+                return 0
+            else:
+                URL_USERS[userID].append(urlExtract) 
+    except Exception as e:
+        logger.info(f'{e=}')
+        #URL_USERS.setdefault(userID,[urlExtract])
+    logger.info(f'{URL_USERS=}')
+    try:
+        idExtract = extract_id_from_url(urlExtract)
+        print(f'{extract_id_from_url=}')
+        downloadFiles = download_files(idExtract)
+        print(f'{downloadFiles=}')
+        media_group = []
+        for photo in downloadFiles:
+            path = '/Users/igorgerasimov/Python/Bitrix/test-chatGPT'
+            media_group.append(InputMediaPhoto(open(f'{path}/{photo}', 'rb'),
+                                    caption = photo))
+        #mediaGroup = create_media_gorup(download_files)
+        #bot.send_media_group(message.chat.id, mediaGroup)
+        #bot.send_media_group(message.chat.id, media_group,)
+        #print('отправка сообщегия')
+        #answer = answer
+        #answer = re.sub(r'\[.*?\]\(.*?\)', '', message_content).replace(' ссылка на', '')
+        #answer = remove_empty_lines(message_content)
+    except Exception as e:
+        logger.info(e)
+        #answer = 'Извините сейчас не могу найти актуальную ссылку'
+    return URL_USERS, media_group
