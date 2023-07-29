@@ -203,7 +203,7 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     #allToken = f'{completion["usage"]["total_tokens"]} токенов использовано всего (вопрос-ответ).'
     #allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
     
-    return f'{answer}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000), docs[0].page_content
+    return f'{answer}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000), docs
 
 #    return answer
   
@@ -243,7 +243,7 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
         {"role": "user", "content": "Суммаризируй следующий диалог менеджера и клиента: "}
     ]
     #messages.extend(history[:-1])
-    messages.extend(history)
+    messages.extend(history[:-1])
 
     completion = openai.ChatCompletion.create(
         model=self.modelVersion,

@@ -30,10 +30,12 @@ def download_files(FOLDER_ID:str, maxFile:int = 5)-> list:
     """
 
     results = drive.files().list(q=f"'{FOLDER_ID}' in parents", pageSize=20).execute()
+    folder_info = drive.files().get(fileId=FOLDER_ID, fields='name').execute()
     items = results.get('files', [])
     print(items)
+    print(f'{folder_info}')
     # Создание папки для скачивания файлов
-    download_folder = 'downloads'
+    download_folder = 'downloads/'
     if not os.path.exists(download_folder):
         os.makedirs(download_folder)
 
@@ -42,10 +44,11 @@ def download_files(FOLDER_ID:str, maxFile:int = 5)-> list:
 
     for i, item in enumerate(items):
         file_id = item['id']
-        file_name = os.path.join(download_folder, item['name'])
+        #file_name = os.path.join(download_folder, item['name'])
+        file_name = f"{folder_info['name']} - {i}.png"
 
         request = drive.files().get_media(fileId=file_id)
-        fh = io.FileIO(file_name, mode='wb')
+        fh = io.FileIO(download_folder+file_name, mode='wb')
         downloader = MediaIoBaseDownload(fh, request)
         done = False
 
@@ -62,3 +65,4 @@ def download_files(FOLDER_ID:str, maxFile:int = 5)-> list:
 
 if __name__ == '__main__':
     pass
+    #download_files('1H7rj0sO_jNtd1NbsHhxJDh5VYBuxyHjj')

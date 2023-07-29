@@ -85,9 +85,11 @@ def create_media_gorup(lst:list):
 @logger.catch
 def download_photo(message_content, URL_USERS, userID):
     urlExtract = extract_url(message_content)
+    if urlExtract is None:
+        return URL_USERS, [], 0
     logger.info(f'{urlExtract=}')
     #logger.info(f'{URL_USERS[userID]=}')
-    
+    media_group = [] 
     try:
         if URL_USERS == {}:
         
@@ -101,25 +103,28 @@ def download_photo(message_content, URL_USERS, userID):
         logger.info(f'{e=}')
         #URL_USERS.setdefault(userID,[urlExtract])
     logger.info(f'{URL_USERS=}')
-    try:
-        idExtract = extract_id_from_url(urlExtract)
-        print(f'{extract_id_from_url=}')
-        downloadFiles = download_files(idExtract)
-        print(f'{downloadFiles=}')
-        media_group = []
-        for photo in downloadFiles:
-            #path = '/Users/igorgerasimov/Python/Bitrix/test-chatGPT'
-            media_group.append(InputMediaPhoto(open(f'{photo}', 'rb'),
-            #media_group.append(InputMediaPhoto(open(f'{path}/{photo}', 'rb'),
-                                    caption = photo))
-        #mediaGroup = create_media_gorup(download_files)
-        #bot.send_media_group(message.chat.id, mediaGroup)
-        #bot.send_media_group(message.chat.id, media_group,)
-        #print('отправка сообщегия')
-        #answer = answer
-        #answer = re.sub(r'\[.*?\]\(.*?\)', '', message_content).replace(' ссылка на', '')
-        #answer = remove_empty_lines(message_content)
-    except Exception as e:
-        logger.info(e)
+    nameProject=' '
+    #try:
+    idExtract = extract_id_from_url(urlExtract)
+    logger.info(f'{extract_id_from_url=}')
+    #сколько файлов загружать
+    downloadFiles = download_files(idExtract, 5)
+    logger.info(f'{downloadFiles=}')
+    #media_group = []
+    for photo in downloadFiles:
+        #path = '/Users/igorgerasimov/Python/Bitrix/test-chatGPT'
+        media_group.append(InputMediaPhoto(open(f'downloads/{photo}', 'rb'),
+        #media_group.append(InputMediaPhoto(open(f'{path}/{photo}', 'rb'),
+                                caption = photo))
+    #mediaGroup = create_media_gorup(download_files)
+    #bot.send_media_group(message.chat.id, mediaGroup)
+    #bot.send_media_group(message.chat.id, media_group,)
+    #print('отправка сообщегия')
+    #answer = answer
+    #answer = re.sub(r'\[.*?\]\(.*?\)', '', message_content).replace(' ссылка на', '')
+    #answer = remove_empty_lines(message_content)
+    nameProject = downloadFiles[0].split(' ')[0]
+    #except Exception as e:
+    #    logger.error(e)
         #answer = 'Извините сейчас не могу найти актуальную ссылку'
-    return URL_USERS, media_group
+    return URL_USERS, media_group, nameProject

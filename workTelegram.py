@@ -131,8 +131,8 @@ def dialog_model1(message):
     sql.set_payload(message.chat.id, 'model1')
     bot.send_message(message.chat.id,'Что вы хотите узнать?',)
 
+#@logger.catch
 @bot.message_handler(content_types=['text'])
-@logger.catch
 def any_message(message):
     global URL_USERS
     #print('это сообщение', message)
@@ -170,12 +170,12 @@ def any_message(message):
     lastMessage = history[-1]['content']
     try:
         if text == 'aabb':
-            raise 'hello'
+            1/0
         answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=1)
         logger.info(f'ответ сети если нет ощибок: {answer}')
         #print('мы получили ответ \n', answer)
     except Exception as e:
-        #bot.send_message(userID, e)
+        bot.send_message(userID, e)
         #bot.send_message(userID, 'начинаю sammury: ответ может занять больше времени, но не более 3х минут')
         history = get_history(str(userID))
         #summaryHistory = gpt.get_summary(history)
@@ -195,7 +195,7 @@ def any_message(message):
         #print('история после очистки\n', history)
         
         #answer = gpt.answer_index(model, text, history, model_index,temp=0.2, verbose=1)
-        answer, allToken, allTokenPrice = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=1)
+        answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=1)
         bot.send_message(message.chat.id, answer)
         add_message_to_history(userID, 'assistant', answer)
 
@@ -214,20 +214,29 @@ def any_message(message):
     #print(f"{prepareAnswer.find('спасибо за предоставленный номер')=}") 
     b = prepareAnswer.find('спасибо за предоставленный номер') 
     print(f'{b=}')
+
     logger.info(f'{message_content=}')
-    photoFolder = message_content.find('https://drive') 
+        
+    photoFolder = message_content[0].page_content.find('https://drive') 
     print(f'{photoFolder=}')
     bot.send_message(message.chat.id, answer,  parse_mode='markdown')
-    
+    media_group = [] 
     if photoFolder >= 0:
         logger.info(f'{URL_USERS=}')
-        URL_USERS, media_group = download_photo(message_content,URL_USERS,userID)
-        bot.send_message(message.chat.id, 'Подождите, ищу фото проекта...',  parse_mode='markdown')
-        try:
-            bot.send_media_group(message.chat.id, media_group,)
-        except Exception as e:
-            bot.send_message(message.chat.id, 'Извините, не могу найти актуальные фото',  parse_mode='markdown') 
-            bot.send_message(message.chat.id, e,  parse_mode='markdown')
+        URL_USERS={}
+        bot.send_message(message.chat.id, 'Подождите, ищу фото проектов...',  parse_mode='markdown')
+        for mes_content in message_content:
+            mes_content= mes_content.page_content
+            #media_group.extend(media_group1)
+            try:
+                URL_USERS, media_group,nameProject = download_photo(mes_content,URL_USERS,userID)
+                if media_group == []:
+                    continue
+                bot.send_message(message.chat.id, f'Отправляю фото проекта {nameProject}...',  parse_mode='markdown')
+                bot.send_media_group(message.chat.id, media_group,)
+            except Exception as e:
+                bot.send_message(message.chat.id, 'Извините, не могу найти актуальные фото',  parse_mode='markdown') 
+                bot.send_message(message.chat.id, e,  parse_mode='markdown')
     if b >= 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
