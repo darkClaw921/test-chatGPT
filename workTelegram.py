@@ -136,11 +136,11 @@ def any_message(message):
     try:
         if text == 'aabb':
             1/0
-        answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=1)
+        answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=0)
         
         if len(history) < 3: 
             answerInfo = {'type': 'no'} 
-            #logger.warning(f'{answerInfo=}')
+            logger.warning(f'{answerInfo=}')
         else: 
             answerInfo = answer_info(lastMessage+text, info_db)
             logger.warning(f'{answerInfo=}')
@@ -149,15 +149,19 @@ def any_message(message):
             bot.send_message(userID, 'подбираю проекты')
             promtPodbor = gpt.load_prompt(PROMT_PODBOR_HOUSE)
             logger.warning(f'{promtPodbor=}')
-            
-            history = gpt.summarize_podborka(promtPodbor, history = get_history(str(userID)))
-            history = [history]
-            history.extend([{'role':'user', 'content': text}])
-            add_old_history(userID,history)
+            hist =  get_history(str(userID))
+            logger.info(f'{hist=}')
+            summary= gpt.summarize_podborka(promtPodbor, history=hist)
+            #history = [history]
+            #history.extend([{'role':'user', 'content': text}])
+            #add_old_history(userID,history)
             history = get_history(str(userID))
         
+            logger.warning(f'{summary=}')
             logger.warning(f'{history=}')
-            answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=1)
+            promtSmmary = f'Отправь клиенту подборку наиболее подходящих проектов по этим критериям: {summary}'
+            #answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=0)
+            answer, allToken, allTokenPrice, message_content = gpt.answer_index(promtSmmary, lastMessage+text, history, model_index,temp=0.5, verbose=0)
             bot.send_message(message.chat.id, answer,  parse_mode='markdown') 
 
             return 0 
@@ -186,7 +190,7 @@ def any_message(message):
         #print('история после очистки\n', history)
         
         #answer = gpt.answer_index(model, text, history, model_index,temp=0.2, verbose=1)
-        answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=1)
+        answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=0)
         bot.send_message(message.chat.id, answer)
         add_message_to_history(userID, 'assistant', answer)
 
