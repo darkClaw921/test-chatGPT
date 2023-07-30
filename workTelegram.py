@@ -161,7 +161,9 @@ def any_message(message):
             logger.warning(f'{history=}')
             promtSmmary = f'Отправь клиенту подборку наиболее подходящих проектов по этим критериям: {summary}'
             #answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=0)
-            answer, allToken, allTokenPrice, message_content = gpt.answer_index(promtSmmary, lastMessage+text, history, model_index,temp=0.5, verbose=0)
+            logger.warning(f'{promtSmmary=}')
+            history=[]
+            answer, allToken, allTokenPrice, message_content = gpt.answer_index(promtSmmary, summary, history, model_index,temp=0.5, verbose=0)
             bot.send_message(message.chat.id, answer,  parse_mode='markdown') 
 
             return 0 
