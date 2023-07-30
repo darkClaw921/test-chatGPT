@@ -225,6 +225,8 @@ def any_message(message):
         bot.send_message(message.chat.id, 'Подождите, ищу фото проектов...',  parse_mode='markdown')
         for mes_content in message_content:
             mes_content= mes_content.page_content
+            if mes_content.find('https://drive') < 0:
+                continue
             #media_group.extend(media_group1)
             try:
                 URL_USERS, media_group,nameProject = download_photo(mes_content,URL_USERS,userID)
