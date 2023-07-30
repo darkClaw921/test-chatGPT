@@ -146,7 +146,7 @@ def any_message(message):
             logger.warning(f'{answerInfo=}')
         if answerInfo['type'] == 'podborka':
             
-            bot.send_message(userID, 'подбираю проекты')
+            bot.send_message(userID, 'Подбираю проекты')
             promtPodbor = gpt.load_prompt(PROMT_PODBOR_HOUSE)
             logger.warning(f'{promtPodbor=}')
             hist =  get_history(str(userID))
@@ -236,7 +236,7 @@ def any_message(message):
                 bot.send_media_group(message.chat.id, media_group,)
             except Exception as e:
                 bot.send_message(message.chat.id, 'Извините, не могу найти актуальные фото',  parse_mode='markdown') 
-                bot.send_message(message.chat.id, e,  parse_mode='markdown')
+                #bot.send_message(message.chat.id, e,  parse_mode='markdown')
     if b >= 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
