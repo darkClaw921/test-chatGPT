@@ -151,7 +151,7 @@ def any_message(message):
             logger.warning(f'{promtPodbor=}')
             hist =  get_history(str(userID))
             logger.info(f'{hist=}')
-            summary= gpt.summarize_podborka(promtPodbor, history=hist)
+            summary= gpt.summarize_podborka(promtPodbor, history=hist)['content']
             #history = [history]
             #history.extend([{'role':'user', 'content': text}])
             #add_old_history(userID,history)
