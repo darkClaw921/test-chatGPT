@@ -8,3 +8,4 @@ ipywidgets
 telebot
 loguru
 fast-bitrix24
+faiss-cpu

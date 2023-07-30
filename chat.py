@@ -13,10 +13,10 @@ import openai
 import tiktoken
 import sys
 from loguru import logger
-import workGS
+#import workGS
 #logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
 #logger.add("file_1.log", rotation="50 MB")
-sheet = workGS.Sheet('kgtaprojects-8706cc47a185.json','цены на дома 4.0 актуально ')
+#sheet = workGS.Sheet('kgtaprojects-8706cc47a185.json','цены на дома 4.0 актуально ')
 
 class bcolors:
     HEADER = '\033[95m'
@@ -49,7 +49,7 @@ class GPT():
       #login_button.on_click(on_button_clicked)
       #display(widgets.VBox([password_input, login_button, output]))
 
-  def load_search_indexes(self, url: str) -> str:
+  def load_search_indexes(self, url: str,gsText:str = '') -> str:
     # Extract the document ID from the URL
     print('попали в load_serch_index')
     match_ = re.search('/document/d/([a-zA-Z0-9-_]+)', url)
@@ -62,7 +62,7 @@ class GPT():
     response.raise_for_status()
     text = response.text
     #для получения данных из таблицы
-    gsText = sheet.get_gs_text()
+    #gsText = sheet.get_gs_text()
     #gsText = ''
     #print(f'{gsText=}')
     text1 = text + gsText
@@ -100,7 +100,7 @@ class GPT():
 
     # Создание индексов документа
     search_index = Chroma.from_documents(source_chunks, OpenAIEmbeddings(), )
-
+    search_index.similarity_search
     count_token = num_tokens_from_string(' '.join([x.page_content for x in source_chunks]), "cl100k_base")
     print('\n ===========================================: ')
     print('Количество токенов в документе :', count_token)
@@ -130,7 +130,8 @@ class GPT():
     allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
     #return f'{completion.choices[0].message.content}\n\n{allToken}\n{allTokenPrice}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
     return f'{completion.choices[0].message.content}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
-
+  
+  @logger.catch
   def num_tokens_from_messages(self, messages, model="gpt-3.5-turbo-0301"):
     """Returns the number of tokens used by a list of messages."""
     try:
@@ -141,6 +142,7 @@ class GPT():
         num_tokens = 0
         for message in messages:
             num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
+            #logger.error(f'{messages}')
             for key, value in message.items():
                 num_tokens += len(encoding.encode(value))
                 if key == "name":  # if there's a name, the role is omitted
@@ -163,7 +165,16 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     lines.append(current_line)
     return "\n".join(lines)
 
-
+  def search_project(self,search_index, topic:str, k:int=4, verbose = 0):
+    #self.create_embedding(text1)
+    docs = search_index.similarity_search(topic, k=k)
+    #print(f'{docs[0].metadata=}')
+    #1/0
+    if (verbose): print('\n ===========================================: ')
+    message_content = re.sub(r'\n{2}', ' ', '\n '.join([f'\nОтрывок документа №{i+1}\n=====================' + doc.page_content + '\n' for i, doc in enumerate(docs)]))
+    if (verbose): print('message_content :\n ======================================== \n', message_content)
+    logger.info(f'{message_content=}')
+    return message_content
  
 
   def answer_index(self, system, topic, history:list, search_index, temp = 1, verbose = 0):
@@ -235,7 +246,27 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     logger.info(answer)
     roleAsnwer= {'role': 'user', 'content': answer}
     return roleAsnwer
-  
+
+  def summarize_podborka(self,promt:str, history:list):
+    # Применяем модель gpt-3.5-turbo-0613 для саммаризации вопросов
+    messages = [
+        {"role": "system", "content": promt},
+        {"role": "user", "content": "Суммаризируй следующий диалог менеджера и клиента: "},
+    ]
+    #messages.extend(history[:-1])
+    messages.extend(history[:-1])
+
+    completion = openai.ChatCompletion.create(
+        model=self.modelVersion,
+        messages=messages,
+        temperature=0.3,  # Используем более низкую температуру для более определенной суммаризации
+        #max_tokens=1000  # Ограничиваем количество токенов для суммаризации
+    )
+    answer = completion.choices[0].message.content
+    logger.info(f'Саммари диалога: {answer}')
+    roleAsnwer= {'role': 'user', 'content': answer}
+    return roleAsnwer
+   
   def summarize_questions(self,history:list):
     # Применяем модель gpt-3.5-turbo-0613 для саммаризации вопросов
     messages = [

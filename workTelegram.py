@@ -17,6 +17,8 @@ from helper import *
 from workGDrive import *
 from telebot.types import InputMediaPhoto
 from workRedis import *
+import workGS
+from workFaiss import *
 load_dotenv()
 
 
@@ -25,6 +27,7 @@ logger.add("file_1.log", rotation="50 MB")
 gpt = GPT()
 GPT.set_key(os.getenv('KEY_AI'))
 bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN'))
+sheet = workGS.Sheet('kgtaprojects-8706cc47a185.json','цены на дома 4.0 актуально ')
 # инициализация бота и диспетчера
 #dp = Dispatcher(bot)
 sql = workYDB.Ydb()
@@ -35,48 +38,15 @@ URL_USERS = {}
 #r = redis.Redis(host='localhost', port=6379, decode_responses=False)
 #print(answer)
 MODEL_URL= 'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing'
-model_index=gpt.load_search_indexes(MODEL_URL)
+gsText = sheet.get_gs_text()
+model_index=gpt.load_search_indexes(MODEL_URL, gsText=gsText)
+model_project = gpt.create_embedding(gsText)
 PROMT_URL = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
 model= gpt.load_prompt(PROMT_URL)
 PROMT_URL_SUMMARY ='https://docs.google.com/document/d/1XhSDXvzNKA9JpF3QusXtgMnpFKY8vVpT9e3ZkivPePE/edit?usp=sharing'
-#models2 = {
-#    'model1': 'https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/edit?usp=sharing',
-#    'model2': 'https://docs.google.com/document/d/1deHxH4rTpuJLJ0fnvsWJe8RwFbpju0-hVLLqklnlAL4/edit?usp=sharing'
-#}
+PROMT_PODBOR_HOUSE = 'https://docs.google.com/document/d/1WTS8SQ2hQSVf8q3trXoQwHuZy5Q-U0fxAof5LYmjYYc/edit?usp=sharing'
 
-# def time_epoch():
-#     from time import mktime
-#     dt = datetime.now()
-#     sec_since_epoch = mktime(dt.timetuple()) + dt.microsecond/1000000.0
-
-#     millis_since_epoch = sec_since_epoch * 1000
-#     return int(millis_since_epoch)
-
-# def get_model_url(modelName: str):
-#     modelUrl = sql.select_query('model', f'model = "{modelName}"')[0]['url']
-#     logger.info(f'get_model_url {modelUrl}')
-#     #print('a', modelUrl)
-#     return modelUrl.decode('utf-8')
-
-# def add_message_to_history(userID:str, role:str, message:str):
-#     mess = {'role': role, 'content': message}
-#     r.lpush(userID, json.dumps(mess))
-
-# def get_history(userID:str):
-#     items = r.lrange(userID, 0, -1)
-#     history = [json.loads(m.decode("utf-8")) for m in items[::-1]]
-#     return history
-
-# def add_old_history(userID:str, history:list):
-#     his = history.copy()
-#     clear_history(userID)
-#     for i in his:
-#         mess = i
-#         r.lpush(userID, json.dumps(mess))
-
-
-# def clear_history(userID:str):
-#     r.delete(userID)
+info_db=create_info_vector()
 
 @bot.message_handler(commands=['addmodel'])
 def add_new_model(message):
@@ -123,7 +93,7 @@ def send_button(message):
     #bot.send_message(message.chat.id, answer)
     clear_history(message.chat.id)
     bot.send_message(message.chat.id, 
-        "Контекст сброшен",)
+        "Контекст сброшен",reply_markup=create_menu_keyboard(),)
 
 @bot.message_handler(commands=['model1'])
 def dialog_model1(message):
@@ -155,23 +125,44 @@ def any_message(message):
     logger.info(f'история {history}')
 
 
-    #print('context2', context + f'клиент: {text}')
-    #model= gpt.load_prompt('https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing')
-    #model= gpt.load_prompt(get_model_url(payload))
-    #model= gpt.load_prompt(get_model_url(payload))
-    #answer = gpt.answer(model, text, temp = 0.1)
-    #answer = gpt.answer_index(model, text, model_index,)
     try:
         logger.info(f'{PROMT_URL}')
         model= gpt.load_prompt(PROMT_URL) 
     except:
         model= gpt.load_prompt(PROMT_URL) 
 
-    lastMessage = history[-1]['content']
+    lastMessage = history[-1]['content'] 
+        
     try:
         if text == 'aabb':
             1/0
         answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=1)
+        
+        if len(history) < 3: 
+            answerInfo = {'type': 'no'} 
+            #logger.warning(f'{answerInfo=}')
+        else: 
+            answerInfo = answer_info(lastMessage+text, info_db)
+            logger.warning(f'{answerInfo=}')
+        if answerInfo['type'] == 'podborka':
+            
+            bot.send_message(userID, 'подбираю проекты')
+            promtPodbor = gpt.load_prompt(PROMT_PODBOR_HOUSE)
+            logger.warning(f'{promtPodbor=}')
+            
+            history = gpt.summarize_podborka(promtPodbor, history = get_history(str(userID)))
+            history = [history]
+            history.extend([{'role':'user', 'content': text}])
+            add_old_history(userID,history)
+            history = get_history(str(userID))
+        
+            logger.warning(f'{history=}')
+            answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=1)
+            bot.send_message(message.chat.id, answer,  parse_mode='markdown') 
+
+            return 0 
+        #answerProject = gpt.search_project(model_project, lastMessage+answer,4,1)
+        #logger.info(f'{answerProject=}')
         logger.info(f'ответ сети если нет ощибок: {answer}')
         #print('мы получили ответ \n', answer)
     except Exception as e:
@@ -218,11 +209,12 @@ def any_message(message):
     logger.info(f'{message_content=}')
         
     photoFolder = message_content[0].page_content.find('https://drive') 
-    print(f'{photoFolder=}')
+    logger.info(f'{photoFolder=}')
     bot.send_message(message.chat.id, answer,  parse_mode='markdown')
     media_group = [] 
     if photoFolder >= 0:
         logger.info(f'{URL_USERS=}')
+        #TODO удалить если нужно чтобы фото отправлялись по 1 разу
         URL_USERS={}
         bot.send_message(message.chat.id, 'Подождите, ищу фото проектов...',  parse_mode='markdown')
         for mes_content in message_content:
