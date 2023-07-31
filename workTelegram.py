@@ -222,8 +222,8 @@ def any_message(message):
     bot.send_message(message.chat.id, answer,  parse_mode='markdown')
     media_group = []
 
-    if answer.find('КД-') < 0:
-        photoFolder = -1
+    if answer.find('КД-') >= 0:
+        photoFolder = 1
 
     if photoFolder >= 0:
         logger.info(f'{URL_USERS=}')
