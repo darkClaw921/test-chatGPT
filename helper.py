@@ -83,12 +83,13 @@ def create_media_gorup(lst:list):
 
 #Google Drive 
 @logger.catch
-def download_photo(message_content, URL_USERS, userID):
-    urlExtract = extract_url(message_content)
-    if urlExtract is None:
-        return URL_USERS, [], 0
-    logger.info(f'{urlExtract=}')
+def download_photo(urlExtract, URL_USERS, userID,):
+    #urlExtract = message_content
+    #if urlExtract is None:
+    #    return URL_USERS, [], 0
+    #logger.info(f'{urlExtract=}')
     #logger.info(f'{URL_USERS[userID]=}')
+
     media_group = [] 
     try:
         if URL_USERS == {}:
@@ -105,6 +106,9 @@ def download_photo(message_content, URL_USERS, userID):
     logger.info(f'{URL_USERS=}')
     nameProject=' '
     #try:
+
+    #TODO    
+
     idExtract = extract_id_from_url(urlExtract)
     logger.info(f'{extract_id_from_url=}')
     #сколько файлов загружать

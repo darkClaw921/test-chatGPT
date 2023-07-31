@@ -38,7 +38,8 @@ URL_USERS = {}
 #r = redis.Redis(host='localhost', port=6379, decode_responses=False)
 #print(answer)
 MODEL_URL= 'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing'
-gsText = sheet.get_gs_text()
+gsText, urls_photo = sheet.get_gs_text()
+print(f'{urls_photo=}')
 model_index=gpt.load_search_indexes(MODEL_URL, gsText=gsText)
 model_project = gpt.create_embedding(gsText)
 PROMT_URL = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
@@ -84,6 +85,8 @@ def restart_modal_index(message):
 
 @bot.message_handler(commands=['context'])
 def send_button(message):
+    global URL_USERS
+    URL_USERS={}
     payload = sql.get_payload(message.chat.id)
     
 
@@ -138,13 +141,13 @@ def any_message(message):
             1/0
         answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=0)
         
-        if len(history) < 3: 
+        if len(history) < 1: 
             answerInfo = {'type': 'no'} 
             logger.warning(f'{answerInfo=}')
         else: 
             answerInfo = answer_info(lastMessage+text, info_db)
             logger.warning(f'{answerInfo=}')
-        if answerInfo['type'] == 'podborka':
+        if answerInfo['type'] == 'podb1orka':
             
             bot.send_message(userID, 'Подбираю проекты')
             promtPodbor = gpt.load_prompt(PROMT_PODBOR_HOUSE)
@@ -217,19 +220,25 @@ def any_message(message):
     photoFolder = message_content[0].page_content.find('https://drive') 
     logger.info(f'{photoFolder=}')
     bot.send_message(message.chat.id, answer,  parse_mode='markdown')
-    media_group = [] 
+    media_group = []
+
+    if answer.find('КД-') < 0:
+        photoFolder = -1
+
     if photoFolder >= 0:
         logger.info(f'{URL_USERS=}')
+        pattern = r"КД-\d+"
+
+        matches = re.findall(pattern, answer)
+        matches = list(set(matches))
         #TODO удалить если нужно чтобы фото отправлялись по 1 разу
-        URL_USERS={}
+        #URL_USERS={}
         bot.send_message(message.chat.id, 'Подождите, ищу фото проектов...',  parse_mode='markdown')
-        for mes_content in message_content:
-            mes_content= mes_content.page_content
-            if mes_content.find('https://drive') < 0:
-                continue
+        for project in matches:
+            url = urls_photo[project]
             #media_group.extend(media_group1)
             try:
-                URL_USERS, media_group,nameProject = download_photo(mes_content,URL_USERS,userID)
+                URL_USERS, media_group,nameProject = download_photo(url,URL_USERS,userID,)
                 if media_group == []:
                     continue
                 bot.send_message(message.chat.id, f'Отправляю фото проекта {nameProject}...',  parse_mode='markdown')

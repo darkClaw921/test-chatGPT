@@ -47,17 +47,20 @@ class Sheet():
     
     def get_gs_text(self):
         allText = '\n\n<Описание Проектов>'
+        urls={}
         b =1
         for i in tqdm(range(2,118)):
             #print(f'{b=}')
             #TODO удалить потом
-            if b == 5: 
-                return allText
+            #if b == 5: 
+            #    return allText, urls
             text = self.get_rom_value(i)
             time.sleep(1.2)
-            allText += prepare_text(text)
+            a, url= prepare_text(text)
+            allText += a
+            urls.update(url)
             b += 1
-        return allText
+        return allText, urls
 
 @dataclass
 class table:
@@ -76,6 +79,7 @@ class table:
     
 def prepare_text(lst:list):
     text = ''
+    urls = {}
     try:
         lst[table.H]=lst[table.H].replace('\xa0', ' ')
         lst[table.I]=lst[table.I].replace('\xa0', ' ')
@@ -104,7 +108,8 @@ def prepare_text(lst:list):
 {lst[table.G]}
     """
     print(f'{text=}')
-    return text
+    urls.setdefault(lst[table.C], lst[table.G])
+    return text,urls 
 
 
 
