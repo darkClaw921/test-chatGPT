@@ -52,7 +52,7 @@ class Sheet():
         for i in tqdm(range(2,118)):
             #print(f'{b=}')
             #TODO удалить потом
-            #if b == 5: 
+            #if b == 2: 
             #    return allText, urls
             text = self.get_rom_value(i)
             time.sleep(1.2)
@@ -76,6 +76,9 @@ class table:
     H :int = 7
     I :int = 8
     J :int = 9
+    K :int = 10
+    L :int = 11
+    I :int = 12
     
 def prepare_text(lst:list):
     text = ''
@@ -93,19 +96,21 @@ def prepare_text(lst:list):
     text = f"""
 <Проект: {lst[table.C]}>
 
-м.кв.: {lst[table.D]}
+м.кв.: {lst[table.F]}
 
-{lst[table.E]}
+Количество этажей: {lst[table.D]}
+Стиль: {lst[table.E]}
 
-{lst[table.F]}
+{lst[table.G]}
+{lst[table.H]}
 
 Стоимость {lst[table.C]}:
+ЗК: {lst[table.J]}
+ТК: {lst[table.K]}
+ВО: {lst[table.L]}
 
-ЗК: {lst[table.H]}
-ТК: {lst[table.I]}
-ВО: {lst[table.J]}
 Фото проекта:{lst[table.C]}
-{lst[table.G]}
+{lst[table.I]}
     """
     print(f'{text=}')
     urls.setdefault(lst[table.C], lst[table.G])

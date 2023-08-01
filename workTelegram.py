@@ -28,18 +28,13 @@ gpt = GPT()
 GPT.set_key(os.getenv('KEY_AI'))
 bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN'))
 sheet = workGS.Sheet('kgtaprojects-8706cc47a185.json','цены на дома 4.0 актуально ')
-# инициализация бота и диспетчера
-#dp = Dispatcher(bot)
 sql = workYDB.Ydb()
-#expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/edit?usp=sharing')
-#answer = gpt.answer(expert_promt, 
-#           'Я хочу, чтобы после завершения обучения мне подобрали работу')
+
 URL_USERS = {}
-#r = redis.Redis(host='localhost', port=6379, decode_responses=False)
-#print(answer)
+
 MODEL_URL= 'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing'
 gsText, urls_photo = sheet.get_gs_text()
-print(f'{urls_photo=}')
+#print(f'{urls_photo=}')
 model_index=gpt.load_search_indexes(MODEL_URL, gsText=gsText)
 model_project = gpt.create_embedding(gsText)
 PROMT_URL = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
@@ -104,6 +99,27 @@ def dialog_model1(message):
     sql.set_payload(message.chat.id, 'model1')
     bot.send_message(message.chat.id,'Что вы хотите узнать?',)
 
+@bot.message_handler(content_types=['photo'])
+def handle_photo(message):
+    # Отправка ответного сообщения
+    #bot.reply_to(message, 'это фото')
+    handle_document(message)
+
+@bot.message_handler(content_types=['document'])
+def handle_document(message):
+    userID= message.chat.id
+    username = message.from_user.username
+    logger.info(f'{message.document=}')#
+    #for document in message.document:
+    file_info = bot.get_file(message.document.file_id)
+    pprint(file_info)
+    file_url = f"https://api.telegram.org/file/bot{os.getenv('TELEBOT_TOKEN')}/{file_info.file_path}"
+        # Отправляем ответное сообщение
+    fileName = download_file(file_url)
+    #bot.reply_to(message, f'Это файл: {file_url}')
+    create_lead_and_attach_file([fileName], username)
+    #create_lead_and_attach_file([],userID)
+
 #@logger.catch
 @bot.message_handler(content_types=['text'])
 def any_message(message):
@@ -141,35 +157,35 @@ def any_message(message):
             1/0
         answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=0)
         
-        if len(history) < 1: 
-            answerInfo = {'type': 'no'} 
-            logger.warning(f'{answerInfo=}')
-        else: 
-            answerInfo = answer_info(lastMessage+text, info_db)
-            logger.warning(f'{answerInfo=}')
-        if answerInfo['type'] == 'podb1orka':
+        # if len(history) < 1: 
+        #     answerInfo = {'type': 'no'} 
+        #     logger.warning(f'{answerInfo=}')
+        # else: 
+        #     answerInfo = answer_info(lastMessage+text, info_db)
+        #     logger.warning(f'{answerInfo=}')
+        # if answerInfo['type'] == 'podb1orka':
             
-            bot.send_message(userID, 'Подбираю проекты')
-            promtPodbor = gpt.load_prompt(PROMT_PODBOR_HOUSE)
-            logger.warning(f'{promtPodbor=}')
-            hist =  get_history(str(userID))
-            logger.info(f'{hist=}')
-            summary= gpt.summarize_podborka(promtPodbor, history=hist)['content']
-            #history = [history]
-            #history.extend([{'role':'user', 'content': text}])
-            #add_old_history(userID,history)
-            history = get_history(str(userID))
+            # bot.send_message(userID, 'Подбираю проекты')
+            # promtPodbor = gpt.load_prompt(PROMT_PODBOR_HOUSE)
+            # logger.warning(f'{promtPodbor=}')
+            # hist =  get_history(str(userID))
+            # logger.info(f'{hist=}')
+            # summary= gpt.summarize_podborka(promtPodbor, history=hist)['content']
+            # #history = [history]
+            # #history.extend([{'role':'user', 'content': text}])
+            # #add_old_history(userID,history)
+            # history = get_history(str(userID))
         
-            logger.warning(f'{summary=}')
-            logger.warning(f'{history=}')
-            promtSmmary = f'Отправь клиенту подборку наиболее подходящих проектов по этим критериям: {summary}'
-            #answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=0)
-            logger.warning(f'{promtSmmary=}')
-            history=[]
-            answer, allToken, allTokenPrice, message_content = gpt.answer_index(promtSmmary, summary, history, model_index,temp=0.5, verbose=0)
-            bot.send_message(message.chat.id, answer,  parse_mode='markdown') 
+            # logger.warning(f'{summary=}')
+            # logger.warning(f'{history=}')
+            # promtSmmary = f'Отправь клиенту подборку наиболее подходящих проектов по этим критериям: {summary}'
+            # #answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=0)
+            # logger.warning(f'{promtSmmary=}')
+            # history=[]
+            # answer, allToken, allTokenPrice, message_content = gpt.answer_index(promtSmmary, summary, history, model_index,temp=0.5, verbose=0)
+            # bot.send_message(message.chat.id, answer,  parse_mode='markdown') 
 
-            return 0 
+            # return 0 
         #answerProject = gpt.search_project(model_project, lastMessage+answer,4,1)
         #logger.info(f'{answerProject=}')
         logger.info(f'ответ сети если нет ощибок: {answer}')
@@ -298,5 +314,5 @@ def any_message(message):
 
 
     
-
+print(f'[OK]')
 bot.infinity_polling()

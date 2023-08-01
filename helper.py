@@ -81,6 +81,28 @@ def create_media_gorup(lst:list):
         
     return media_group
 
+import base64
+import urllib.request
+
+def read_file_as_base64(file_path):
+    
+    with open(file_path, 'rb') as file:
+        file_data = file.read()
+        if file_data:
+            file_base64 = base64.b64encode(file_data).decode('utf-8')
+            return file_base64
+        else:
+            print("Файл пуст.")
+            return None
+        
+def download_file(url):
+    directory = 'downloadsProject/'
+    os.makedirs(directory, exist_ok=True) # Создаем папку, если её не существует
+    filename = url.split('/')[-1]  # Извлекаем имя файла из ссылки
+    full_path = os.path.join(directory, filename)  # Формируем полный путь для сохранения файла
+    urllib.request.urlretrieve(url, full_path)  # Скачиваем файл по ссылке и сохраняем его по указанному пути
+    return full_path
+
 #Google Drive 
 @logger.catch
 def download_photo(urlExtract, URL_USERS, userID,):

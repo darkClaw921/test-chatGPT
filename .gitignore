@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 /aa
 /downloads
+/downloadsProject
 # C extensions
 *.so
 *.pkl
