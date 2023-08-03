@@ -107,7 +107,7 @@ def handle_photo(message):
     file_id = photo_info.file_id
 
     # Скачиваем фото
-    file_info = bot.get_file(file_id).file_path
+    file_info = bot.get_file(file_id)
     file_url = f"https://api.telegram.org/file/bot{os.getenv('TELEBOT_TOKEN')}/{file_info.file_path}" 
     fileName = download_file(file_url)
     create_lead_and_attach_file([fileName], username)
