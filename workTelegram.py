@@ -101,9 +101,17 @@ def dialog_model1(message):
 
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
-    # Отправка ответного сообщения
-    #bot.reply_to(message, 'это фото')
-    handle_document(message)
+     # Получаем информацию о фото
+    username = message.from_user.username
+    photo_info = message.photo[-1]
+    file_id = photo_info.file_id
+
+    # Скачиваем фото
+    file_info = bot.get_file(file_id).file_path
+    file_url = f"https://api.telegram.org/file/bot{os.getenv('TELEBOT_TOKEN')}/{file_info.file_path}" 
+    fileName = download_file(file_url)
+    create_lead_and_attach_file([fileName], username)
+    bot.reply_to(message, f'Спасибо, мы просчитаем Ваш проект и свяжемся с вами')
 
 @bot.message_handler(content_types=['document'])
 def handle_document(message):
@@ -116,8 +124,10 @@ def handle_document(message):
     file_url = f"https://api.telegram.org/file/bot{os.getenv('TELEBOT_TOKEN')}/{file_info.file_path}"
         # Отправляем ответное сообщение
     fileName = download_file(file_url)
-    #bot.reply_to(message, f'Это файл: {file_url}')
     create_lead_and_attach_file([fileName], username)
+    bot.reply_to(message, f'Спасибо, мы просчитаем Ваш проект и свяжемся с вами')
+    
+
     #create_lead_and_attach_file([],userID)
 
 #@logger.catch
