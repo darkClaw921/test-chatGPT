@@ -124,6 +124,7 @@ def download_photo(urlExtract, URL_USERS, userID,):
                 URL_USERS[userID].append(urlExtract) 
     except Exception as e:
         logger.info(f'{e=}')
+        URL_USERS.setdefault(userID,[urlExtract])
         #URL_USERS.setdefault(userID,[urlExtract])
     logger.info(f'{URL_USERS=}')
     nameProject=' '
