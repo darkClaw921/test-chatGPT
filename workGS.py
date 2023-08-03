@@ -78,7 +78,7 @@ class table:
     J :int = 9
     K :int = 10
     L :int = 11
-    I :int = 12
+    M :int = 12
     
 def prepare_text(lst:list):
     text = ''
@@ -113,7 +113,7 @@ def prepare_text(lst:list):
 {lst[table.I]}
     """
     print(f'{text=}')
-    urls.setdefault(lst[table.C], lst[table.G])
+    urls.setdefault(lst[table.C], lst[table.I])
     return text,urls 
 
 

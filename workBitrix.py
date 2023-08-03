@@ -140,9 +140,17 @@ def create_lead_and_attach_file(files:list, nicname:str):
         logger.error(f'обновлен лид {leadID}')
 
 if __name__ == '__main__':
+    #isk.file.get
+    #fil = bit.call('disk.file.get', {'id':'169947'})
+    #print(fil)
+    #pass
+    # file1 = bit.call(
+    #     'disk.file.get',
+    #     [{"id": 169947}])
+    # print(file1)
+    a = get_lead(25975)
+    pprint(a)
     pass
-    # a = get_lead()
-    # pprint(a)
    # create_lead_and_attach_file(['downloadsProject/file_14.png', 'downloadsProject/file_13.png'],'darkClaw921')
     
     #phone = '+79308316655'
