@@ -268,11 +268,12 @@ def any_message(message):
                 bot.send_message(message.chat.id, f'Извините, не могу найти актуальные фото {project}',  parse_mode='markdown') 
                 logger.error(e)
         
-        if len(matches) == 1: 
-            mes = 'Вам понравился проект?'
-        else:
-            mes = 'Какой проект Вам понравился?'
-        bot.send_message(message.chat.id, mes,  parse_mode='markdown')
+        if media_group != []:
+            if len(matches) == 1: 
+                mes = 'Вам понравился проект?'
+            else:
+                mes = 'Какой проект Вам понравился?'
+            bot.send_message(message.chat.id, mes,  parse_mode='markdown')
     
     if b >= 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
