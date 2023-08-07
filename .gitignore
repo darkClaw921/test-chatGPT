@@ -5,6 +5,7 @@ __pycache__/
 /aa
 /downloads
 /downloadsProject
+*.rdb
 # C extensions
 *.so
 *.pkl

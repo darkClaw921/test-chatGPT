@@ -111,6 +111,7 @@ def download_photo(urlExtract, URL_USERS, userID,):
     #    return URL_USERS, [], 0
     #logger.info(f'{urlExtract=}')
     #logger.info(f'{URL_USERS[userID]=}')
+    nameProject=' '
 
     media_group = [] 
     try:
@@ -119,7 +120,7 @@ def download_photo(urlExtract, URL_USERS, userID,):
             URL_USERS.setdefault(userID,[urlExtract])
         else: 
             if urlExtract in URL_USERS[userID]:
-                return 0
+                return URL_USERS, [], nameProject
             else:
                 URL_USERS[userID].append(urlExtract) 
     except Exception as e:
@@ -127,7 +128,6 @@ def download_photo(urlExtract, URL_USERS, userID,):
         URL_USERS.setdefault(userID,[urlExtract])
         #URL_USERS.setdefault(userID,[urlExtract])
     logger.info(f'{URL_USERS=}')
-    nameProject=' '
     #try:
 
     #TODO    

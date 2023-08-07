@@ -60,9 +60,13 @@ def say_welcome(message):
     row = {'id': message.chat.id, 'model': '', 'promt': '','nicname':username, 'payload': ''}
     sql.replace_query('user', row)
     
-    text = """Здравствуйте, я AI ассистент компании Сканди ЭкоДом. Я отвечу на Ваши вопросы по поводу строительства загородного дома и задам свои 😁. Хотите я Вам расскажу про варианты комплектации домов?
-    """
-    bot.send_message(message.chat.id, text, 
+    #text = """Здравствуйте, я AI ассистент компании Сканди ЭкоДом. Я отвечу на Ваши вопросы по поводу строительства загородного дома и задам свои 😁. Хотите я Вам расскажу про варианты комплектации домов?
+    #"""
+    text = """Здравствуйте"""
+    history = get_history(str(message.chat.id))
+    answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=0)
+    add_message_to_history(message.chat.id, 'assistant', answer) 
+    bot.send_message(message.chat.id, answer, 
                      parse_mode='markdown',
                      reply_markup= create_menu_keyboard())
 #expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/')
@@ -166,38 +170,6 @@ def any_message(message):
         if text == 'aabb':
             1/0
         answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=0)
-        
-        # if len(history) < 1: 
-        #     answerInfo = {'type': 'no'} 
-        #     logger.warning(f'{answerInfo=}')
-        # else: 
-        #     answerInfo = answer_info(lastMessage+text, info_db)
-        #     logger.warning(f'{answerInfo=}')
-        # if answerInfo['type'] == 'podb1orka':
-            
-            # bot.send_message(userID, 'Подбираю проекты')
-            # promtPodbor = gpt.load_prompt(PROMT_PODBOR_HOUSE)
-            # logger.warning(f'{promtPodbor=}')
-            # hist =  get_history(str(userID))
-            # logger.info(f'{hist=}')
-            # summary= gpt.summarize_podborka(promtPodbor, history=hist)['content']
-            # #history = [history]
-            # #history.extend([{'role':'user', 'content': text}])
-            # #add_old_history(userID,history)
-            # history = get_history(str(userID))
-        
-            # logger.warning(f'{summary=}')
-            # logger.warning(f'{history=}')
-            # promtSmmary = f'Отправь клиенту подборку наиболее подходящих проектов по этим критериям: {summary}'
-            # #answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, lastMessage+text, history, model_index,temp=0.5, verbose=0)
-            # logger.warning(f'{promtSmmary=}')
-            # history=[]
-            # answer, allToken, allTokenPrice, message_content = gpt.answer_index(promtSmmary, summary, history, model_index,temp=0.5, verbose=0)
-            # bot.send_message(message.chat.id, answer,  parse_mode='markdown') 
-
-            # return 0 
-        #answerProject = gpt.search_project(model_project, lastMessage+answer,4,1)
-        #logger.info(f'{answerProject=}')
         logger.info(f'ответ сети если нет ощибок: {answer}')
         #print('мы получили ответ \n', answer)
     except Exception as e:
@@ -241,14 +213,16 @@ def any_message(message):
     b = prepareAnswer.find('спасибо за предоставленный номер') 
     print(f'{b=}')
 
-    logger.info(f'{message_content=}')
+    #выборка 
+    #logger.info(f'{message_content=}')
         
-    photoFolder = message_content[0].page_content.find('https://drive') 
-    logger.info(f'{photoFolder=}')
     bot.send_message(message.chat.id, answer,  parse_mode='markdown')
     media_group = []
+    photoFolder = -1
 
     if answer.find('КД-') >= 0:
+        #photoFolder = message_content[0].page_content.find('https://drive') 
+        #logger.info(f'{photoFolder=}')
         photoFolder = 1
 
     if photoFolder >= 0:
@@ -259,19 +233,47 @@ def any_message(message):
         matches = list(set(matches))
         #TODO удалить если нужно чтобы фото отправлялись по 1 разу
         #URL_USERS={}
-        bot.send_message(message.chat.id, 'Подождите, ищу фото проектов...',  parse_mode='markdown')
+        #TODO переделать чтобы один раз отвечал
+
+        isSendMessage = True
+        trueList = []
         for project in matches:
-            url = urls_photo[project]
+            if URL_USERS == {}: 
+                trueList.append(False) 
+                break
+            try:
+                url = urls_photo[project]
+            except:
+                continue
+            try:
+                a = url in URL_USERS[userID]
+                trueList.append(a)
+            except:
+                trueList.append(False)
+                break
+
+        if all(trueList): isSendMessage = False
+        if isSendMessage: bot.send_message(message.chat.id, 'Подождите, ищу фото проектов...',  parse_mode='markdown')
+
+        for project in matches:
             #media_group.extend(media_group1)
             try:
+                url = urls_photo[project]
                 URL_USERS, media_group,nameProject = download_photo(url,URL_USERS,userID,)
                 if media_group == []:
                     continue
                 bot.send_message(message.chat.id, f'Отправляю фото проекта {nameProject}...',  parse_mode='markdown')
                 bot.send_media_group(message.chat.id, media_group,)
             except Exception as e:
-                bot.send_message(message.chat.id, 'Извините, не могу найти актуальные фото',  parse_mode='markdown') 
-                #bot.send_message(message.chat.id, e,  parse_mode='markdown')
+                bot.send_message(message.chat.id, f'Извините, не могу найти актуальные фото {project}',  parse_mode='markdown') 
+                logger.error(e)
+        
+        if len(matches) == 1: 
+            mes = 'Вам понравился проект?'
+        else:
+            mes = 'Какой проект Вам понравился?'
+        bot.send_message(message.chat.id, mes,  parse_mode='markdown')
+    
     if b >= 0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
