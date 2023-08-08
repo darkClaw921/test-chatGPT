@@ -211,6 +211,8 @@ def any_message(message):
     #print(f'{prepareAnswer=}')
     #print(f"{prepareAnswer.find('спасибо за предоставленный номер')=}") 
     b = prepareAnswer.find('спасибо за предоставленный номер') 
+    b1 = prepareAnswer.find('наш менеджер свяжется с вами') 
+    b2 = prepareAnswer.find('за предоставленный номер')
     print(f'{b=}')
 
     #выборка 
@@ -275,7 +277,7 @@ def any_message(message):
                 mes = 'Какой проект Вам понравился?'
             bot.send_message(message.chat.id, mes,  parse_mode='markdown')
     
-    if b >= 0:
+    if b >= 0 or b1>=0 or b2>=0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
         PROMT_SUMMARY = gpt.load_prompt(PROMT_URL_SUMMARY)
         history = get_history(str(userID))
