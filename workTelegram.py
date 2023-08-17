@@ -32,17 +32,18 @@ sql = workYDB.Ydb()
 
 URL_USERS = {}
 
-MODEL_URL= 'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing'
-gsText, urls_photo = sheet.get_gs_text()
+MODEL_URL= 'https://docs.google.com/document/d/17a4WtyRxhDk3D2-Kger1eBiekBQ2BmMLTYg3e6joKDI/edit?usp=sharing'
+#gsText, urls_photo = sheet.get_gs_text()
 #print(f'{urls_photo=}')
-model_index=gpt.load_search_indexes(MODEL_URL, gsText=gsText)
-model_project = gpt.create_embedding(gsText)
-PROMT_URL = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
+model_index=gpt.load_search_indexes(MODEL_URL) 
+PROMT_URL = 'https://docs.google.com/document/d/1Oiys8iwstN4Ugjfz3pnD3LFGpHHgVHwUTp2ILjqcbsw/edit?usp=sharing'
 model= gpt.load_prompt(PROMT_URL)
-PROMT_URL_SUMMARY ='https://docs.google.com/document/d/1XhSDXvzNKA9JpF3QusXtgMnpFKY8vVpT9e3ZkivPePE/edit?usp=sharing'
-PROMT_PODBOR_HOUSE = 'https://docs.google.com/document/d/1WTS8SQ2hQSVf8q3trXoQwHuZy5Q-U0fxAof5LYmjYYc/edit?usp=sharing'
 
-info_db=create_info_vector()
+
+# PROMT_URL_SUMMARY ='https://docs.google.com/document/d/1XhSDXvzNKA9JpF3QusXtgMnpFKY8vVpT9e3ZkivPePE/edit?usp=sharing'
+# PROMT_PODBOR_HOUSE = 'https://docs.google.com/document/d/1WTS8SQ2hQSVf8q3trXoQwHuZy5Q-U0fxAof5LYmjYYc/edit?usp=sharing'
+
+#info_db=create_info_vector()
 
 @bot.message_handler(commands=['addmodel'])
 def add_new_model(message):
