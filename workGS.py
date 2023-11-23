@@ -49,7 +49,8 @@ class Sheet():
         allText = '\n\n<Описание Проектов>'
         urls={}
         b =1
-        for i in tqdm(range(2,118)):
+        for i in tqdm(range(2,122)):
+            #TODO сделать чтобы только заполненые строки
             #print(f'{b=}')
             #TODO удалить потом
             #if b == 10: 

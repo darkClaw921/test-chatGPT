@@ -27,15 +27,18 @@ logger.add("file_1.log", rotation="50 MB")
 gpt = GPT()
 GPT.set_key(os.getenv('KEY_AI'))
 bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN'))
-sheet = workGS.Sheet('kgtaprojects-8706cc47a185.json','цены на дома 4.0 актуально ')
+sheet = workGS.Sheet('yandex_google.json','цены на дома 4.0 актуально ')
+# sheet = workGS.Sheet('kgtaprojects-8706cc47a185.json','цены на дома 4.0 актуально ')
 sql = workYDB.Ydb()
 
 URL_USERS = {}
 
 MODEL_URL= 'https://docs.google.com/document/d/17a4WtyRxhDk3D2-Kger1eBiekBQ2BmMLTYg3e6joKDI/edit?usp=sharing'
-#gsText, urls_photo = sheet.get_gs_text()
-#print(f'{urls_photo=}')
-model_index=gpt.load_search_indexes(MODEL_URL) 
+
+gsText, urls_photo = sheet.get_gs_text()
+print(f'{urls_photo=}')
+
+model_index=gpt.load_search_indexes(MODEL_URL, gsText) 
 PROMT_URL = 'https://docs.google.com/document/d/1Oiys8iwstN4Ugjfz3pnD3LFGpHHgVHwUTp2ILjqcbsw/edit?usp=sharing'
 model= gpt.load_prompt(PROMT_URL)
 
