@@ -19,6 +19,7 @@ from telebot.types import InputMediaPhoto
 from workRedis import *
 import workGS
 from workFaiss import *
+import requests
 load_dotenv()
 
 
@@ -34,11 +35,13 @@ sql = workYDB.Ydb()
 
 URL_USERS = {}
 
+CHAT_ROOM_URL = os.getenv('CHAT_ROOM_URL')
+
 MODEL_URL= 'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing'
 
-gsText, urls_photo = sheet.get_gs_text()
-print(f'{urls_photo=}')
-#gsText=''
+#gsText, urls_photo = sheet.get_gs_text()
+#print(f'{urls_photo=}')
+gsText=''
 model_index=gpt.load_search_indexes(MODEL_URL, gsText) 
 PROMT_URL = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
 model= gpt.load_prompt(PROMT_URL)
@@ -48,6 +51,45 @@ model= gpt.load_prompt(PROMT_URL)
 # PROMT_PODBOR_HOUSE = 'https://docs.google.com/document/d/1WTS8SQ2hQSVf8q3trXoQwHuZy5Q-U0fxAof5LYmjYYc/edit?usp=sharing'
 
 #info_db=create_info_vector()
+
+
+def sendMessageToUser(chat_id,text, parse_mode=None, reply_markup=None):
+    try:
+        bot.send_message(chat_id, text, parse_mode=parse_mode, reply_markup=reply_markup)
+        requests.post(f'{CHAT_ROOM_URL}/message/{chat_id}/Бот: {text}') 
+
+    except Exception as e:
+        logger.error(e)
+        bot.send_message(chat_id, 'Извините, произошла ошибка, попробуйте позже', parse_mode=parse_mode, reply_markup=reply_markup)
+        return 0
+    return 1
+
+def check_time_last_message(userID):
+    try:
+        time_last_mess = sql.select_query('user',f'id = {userID}')[0]['time_last_mess']
+    except Exception as e:
+        logger.debug(f'{e=}')
+        return True
+    
+    time_last_mess = timestamp_to_date(time_last_mess)
+    time_last_mess = datetime.strptime(time_last_mess, '%Y-%m-%dT%H:%M:%SZ')
+    time_now = datetime.now()
+    delta = time_now - time_last_mess
+    logger.debug(f'{delta=}')
+    logger.debug(f'{delta < timedelta(hours=1)=}')
+
+    if delta < timedelta(hours=1):
+        return False
+    else:
+        return True
+    
+
+def send_message_to_telegram(userID, message):
+    row = {
+        'time_last_mess': get_dates(0)[0],
+    }
+    sql.update_query('user', row, f'id = {userID}')
+    bot.send_message(userID, message)
 
 @bot.message_handler(commands=['addmodel'])
 def add_new_model(message):
@@ -70,10 +112,23 @@ def say_welcome(message):
     text = """Здравствуйте"""
     history = get_history(str(message.chat.id))
     answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=0)
+    requests.post(f'{CHAT_ROOM_URL}/create/room/{message.chat.id}', timeout=2)
+
     add_message_to_history(message.chat.id, 'assistant', answer) 
-    bot.send_message(message.chat.id, answer, 
+    row={
+        'fields':{
+            'TITLE': f'Лид с телеграма {username}',
+            'NAME': username,
+            'UF_CRM_1689546544': f'ссылка на чат с клиентом: {CHAT_ROOM_URL}/room/{message.chat.id}',
+    }}
+    
+    create_lead(row)
+    
+    sendMessageToUser(message.chat.id, answer, 
                      parse_mode='markdown',
                      reply_markup= create_menu_keyboard())
+    
+    
 #expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/')
 
 @bot.message_handler(commands=['restart'])
@@ -83,7 +138,7 @@ def restart_modal_index(message):
     #url = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
     #model= gpt.load_prompt(url)
     model= gpt.load_prompt(PROMT_URL)
-    bot.send_message(message.chat.id, 'Обновлено', 
+    sendMessageToUser(message.chat.id, 'Обновлено', 
                      parse_mode='markdown',
                      reply_markup= create_menu_keyboard())
 
@@ -99,14 +154,14 @@ def send_button(message):
     sql.set_payload(message.chat.id, ' ')
     #bot.send_message(message.chat.id, answer)
     clear_history(message.chat.id)
-    bot.send_message(message.chat.id, 
+    sendMessageToUser(message.chat.id, 
         "Контекст сброшен",reply_markup=create_menu_keyboard(),)
 
 @bot.message_handler(commands=['model1'])
 def dialog_model1(message):
     #payload = sql.get_payload(message.chat.id)
     sql.set_payload(message.chat.id, 'model1')
-    bot.send_message(message.chat.id,'Что вы хотите узнать?',)
+    sendMessageToUser(message.chat.id,'Что вы хотите узнать?',)
 
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
@@ -148,6 +203,10 @@ def any_message(message):
     text = message.text
     userID= message.chat.id
     payload = sql.get_payload(userID)
+    a = requests.post(f'{CHAT_ROOM_URL}/message/{userID}/Клиент:{text}')
+    
+
+    #if check_time_last_message(userID) == False: return 0
 
     if payload == 'addmodel':
         text = text.split(' ')
@@ -178,8 +237,8 @@ def any_message(message):
         logger.info(f'ответ сети если нет ощибок: {answer}')
         #print('мы получили ответ \n', answer)
     except Exception as e:
-        bot.send_message(userID, e)
-        #bot.send_message(userID, 'начинаю sammury: ответ может занять больше времени, но не более 3х минут')
+        sendMessageToUser(userID, e)
+        #sendMessageToUser(userID, 'начинаю sammury: ответ может занять больше времени, но не более 3х минут')
         history = get_history(str(userID))
         #summaryHistory = gpt.get_summary(history)
         summaryHistory1 = gpt.summarize_questions(history)
@@ -199,7 +258,7 @@ def any_message(message):
         
         #answer = gpt.answer_index(model, text, history, model_index,temp=0.2, verbose=1)
         answer, allToken, allTokenPrice, message_content = gpt.answer_index(model, text, history, model_index,temp=0.5, verbose=0)
-        bot.send_message(message.chat.id, answer)
+        sendMessageToUser(message.chat.id, answer)
         add_message_to_history(userID, 'assistant', answer)
 
         return 0 
@@ -211,7 +270,7 @@ def any_message(message):
     #b = gpt.get_summary(history)
     #print(f'{b=}')
     #for i in answerBlock:
-    #    bot.send_message(message.chat.id, i)
+    #    sendMessageToUser(message.chat.id, i)
     prepareAnswer= answer.lower()
     #print(f'{prepareAnswer=}')
     #print(f"{prepareAnswer.find('спасибо за предоставленный номер')=}") 
@@ -223,7 +282,7 @@ def any_message(message):
     #выборка 
     #logger.info(f'{message_content=}')
         
-    bot.send_message(message.chat.id, answer,  parse_mode='markdown')
+    sendMessageToUser(message.chat.id, answer,  parse_mode='markdown')
     media_group = []
     photoFolder = -1
 
@@ -260,7 +319,7 @@ def any_message(message):
                 break
 
         if all(trueList): isSendMessage = False
-        if isSendMessage: bot.send_message(message.chat.id, 'Подождите, ищу фото проектов...',  parse_mode='markdown')
+        if isSendMessage: sendMessageToUser(message.chat.id, 'Подождите, ищу фото проектов...',  parse_mode='markdown')
 
         for project in matches:
             #media_group.extend(media_group1)
@@ -269,10 +328,10 @@ def any_message(message):
                 URL_USERS, media_group,nameProject = download_photo(url,URL_USERS,userID,)
                 if media_group == []:
                     continue
-                bot.send_message(message.chat.id, f'Отправляю фото проекта {nameProject}...',  parse_mode='markdown')
+                sendMessageToUser(message.chat.id, f'Отправляю фото проекта {nameProject}...',  parse_mode='markdown')
                 bot.send_media_group(message.chat.id, media_group,)
             except Exception as e:
-                bot.send_message(message.chat.id, f'Извините, не могу найти актуальные фото {project}',  parse_mode='markdown') 
+                sendMessageToUser(message.chat.id, f'Извините, не могу найти актуальные фото {project}',  parse_mode='markdown') 
                 logger.error(e)
         
         if media_group != []:
@@ -280,7 +339,7 @@ def any_message(message):
                 mes = 'Вам понравился проект?'
             else:
                 mes = 'Какой проект Вам понравился?'
-            bot.send_message(message.chat.id, mes,  parse_mode='markdown')
+            sendMessageToUser(message.chat.id, mes,  parse_mode='markdown')
     
     if b >= 0 or b1>=0 or b2>=0:
         print(f"{prepareAnswer.find('cпасибо за предоставленный номер')=}")
@@ -289,7 +348,7 @@ def any_message(message):
         history_answer = gpt.answer(PROMT_SUMMARY,history)[0]
         print(f'{history_answer=}')
         print(f'{answer=}')
-        #bot.send_message(message.chat.id, answer)
+        #sendMessageToUser(message.chat.id, answer)
         phone = slice_str_phone(history_answer)
         pprint(f"{phone=}")
         
@@ -299,7 +358,7 @@ def any_message(message):
     #try:
     #    bot.send_media_group(message.chat.id, media_group)
     #except Exception as e:
-    #    bot.send_message(message.chat.id, e,  parse_mode='markdown')
+    #    sendMessageToUser(message.chat.id, e,  parse_mode='markdown')
 
     #if payload == 'model3':
     now = datetime.now()+timedelta(hours=3)

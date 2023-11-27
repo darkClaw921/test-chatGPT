@@ -28,7 +28,7 @@ def deal_history():
     pprint(dealHist)
 
 def create_lead(items:dict):
-    dealID = bit.call('crm.lead.add', items=items,raw=True)
+    dealID = bit.call('crm.lead.add', items=items, raw=True)
     return dealID
 
 def serch_lead_for_name(nicname:str)->int:

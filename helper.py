@@ -2,9 +2,10 @@ import re
 import telebot
 from loguru import logger
 #import datetime 
-from datetime import datetime
+from datetime import datetime, timedelta
 from workGDrive import *
 from telebot.types import InputMediaPhoto
+import time
 # any
 def time_epoch():
     from time import mktime
@@ -14,6 +15,29 @@ def time_epoch():
     millis_since_epoch = sec_since_epoch * 1000
     return int(millis_since_epoch)
 
+def get_dates(day):
+    # Текущая дата
+    #patern = '2023-07-18T20:26:32Z'
+    patern = '%Y-%m-%dT%H:%M:%SZ'
+    current_date = datetime.now().strftime(patern)
+
+    # Дата, отстоящая на 30 дней
+    delta = timedelta(days=day)
+    future_date = (datetime.now() + delta).strftime(patern)
+
+    return current_date, future_date
+def timestamp_to_date(timestap, pattern = '%Y-%m-%dT%H:%M:%SZ'):
+   
+    """timestamp
+
+    Returns:
+        str: %Y-%m-%dT%H:%M:%SZ
+    """
+    a = time.gmtime(timestap)
+    date_time = datetime(*a[:6])
+    date_string = date_time.strftime(pattern)
+    
+    return date_string
 def get_model_url(modelName: str):
     modelUrl = sql.select_query('model', f'model = "{modelName}"')[0]['url']
     logger.info(f'get_model_url {modelUrl}')
