@@ -26,7 +26,8 @@ logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
 logger.add("file_1.log", rotation="50 MB")
 gpt = GPT()
 GPT.set_key(os.getenv('KEY_AI'))
-bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN')).delete_webhook()
+bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN'))
+# print(bot)
 sheet = workGS.Sheet('yandex_google.json','цены на дома 4.0 актуально ')
 # sheet = workGS.Sheet('kgtaprojects-8706cc47a185.json','цены на дома 4.0 актуально ')
 sql = workYDB.Ydb()
@@ -37,7 +38,7 @@ MODEL_URL= 'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358
 
 gsText, urls_photo = sheet.get_gs_text()
 print(f'{urls_photo=}')
-
+#gsText=''
 model_index=gpt.load_search_indexes(MODEL_URL, gsText) 
 PROMT_URL = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
 model= gpt.load_prompt(PROMT_URL)
