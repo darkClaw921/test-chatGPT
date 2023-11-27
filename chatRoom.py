@@ -3,7 +3,13 @@ from flask_socketio import SocketIO, join_room, leave_room, send
 import random
 from pprint import pprint
 from loguru import logger
-from workTelegram import send_message_to_telegram, set_isSend
+# from workTelegram import send_message_to_telegram
+
+import os
+import telebot
+from dotenv import load_dotenv
+load_dotenv()
+
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "supersecretkey"
 # app.config['SERVER_CERT'] = 'cert.pem'
@@ -166,8 +172,9 @@ def handle_message(payload):
         chatID = room
         text = payload["message"]
 
-        send_message_to_telegram(userID=chatID, message=text)
-        set_isSend()
+        # send_message_to_telegram(userID=chatID, message=text)
+        bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN')).send_message(chat_id=chatID, text='text')
+        # set_isSend()
 
     message = {
         "sender": name,
@@ -193,7 +200,9 @@ def handle_message(payload):
     # socketio.call()
     
 if __name__ == "__main__":
-    socketio.run(app, host='0.0.0.0', port='5004', debug=False)
+    # bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN')).send_message(400923372, 'text2')
+    # send_message_to_telegram(userID=400923372, message='text')
+    socketio.run(app, host='0.0.0.0', port='5005', debug=False)
     
     # socketio.run(app, host='0.0.0.0', ssl_context=('cert.pem','key.pem'),port='5004', debug=False)
     
