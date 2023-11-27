@@ -39,9 +39,9 @@ CHAT_ROOM_URL = os.getenv('CHAT_ROOM_URL')
 
 MODEL_URL= 'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UWBrM/edit?usp=sharing'
 
-#gsText, urls_photo = sheet.get_gs_text()
-#print(f'{urls_photo=}')
-gsText=''
+gsText, urls_photo = sheet.get_gs_text()
+print(f'{urls_photo=}')
+# gsText=''
 model_index=gpt.load_search_indexes(MODEL_URL, gsText) 
 PROMT_URL = 'https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing'
 model= gpt.load_prompt(PROMT_URL)
