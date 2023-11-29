@@ -173,7 +173,7 @@ def handle_message(payload):
         text = payload["message"]
 
         # send_message_to_telegram(userID=chatID, message=text)
-        bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN')).send_message(chat_id=chatID, text='text')
+        bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN')).send_message(chat_id=chatID, text=text)
         # set_isSend()
 
     message = {
