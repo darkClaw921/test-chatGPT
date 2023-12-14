@@ -218,11 +218,15 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     if (verbose): print('\n ===========================================: ')
     print('ОТВЕТ : \n', self.insert_newlines(completion.choices[0].message.content))
 
-    answer = completion.choices[0].message.content
-    #allToken = f'{completion["usage"]["total_tokens"]} токенов использовано всего (вопрос-ответ).'
-    #allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
+    totalToken = completion.usage.total_tokens
+    answerText =completion.choices[0].message.content
+
+    allToken = f'{totalToken} токенов использовано всего (вопрос-ответ).'
+    allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(totalToken/1000)} $'
+    #return f'{completion.choices[0].message.content}\n\n{allToken}\n{allTokenPrice}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
+    return f'{answerText}', totalToken, 0.002*(totalToken/1000), docs
     
-    return f'{answer}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000), docs
+    # return f'{answer}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000), docs
 
 #    return answer
   
