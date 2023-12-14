@@ -18,7 +18,7 @@ from loguru import logger
 
 load_dotenv()
 openai_key = os.environ.get("OPENAI_API_KEY")
-openai.api_key =openai_key 
+ 
 
 #sheet = workGS.Sheet('kgtaprojects-8706cc47a185.json','цены на дома 4.0 актуально ')
 #gsText = sheet.get_gs_text()

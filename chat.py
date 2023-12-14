@@ -9,7 +9,11 @@ import ipywidgets as widgets
 from oauth2client.service_account import ServiceAccountCredentials
 import re
 
-import openai
+from openai import OpenAI
+
+
+
+
 import tiktoken
 import sys
 from loguru import logger
@@ -17,6 +21,12 @@ from loguru import logger
 #logger.add(sys.stderr, format="{time} {level} {message}", level="INFO")
 #logger.add("file_1.log", rotation="50 MB")
 #sheet = workGS.Sheet('kgtaprojects-8706cc47a185.json','цены на дома 4.0 актуально ')
+from dotenv import load_dotenv
+load_dotenv()
+import os
+KEY_AI = os.environ.get('KEY_AI')
+
+client = OpenAI(api_key=KEY_AI)
 
 class bcolors:
     HEADER = '\033[95m'
@@ -38,7 +48,7 @@ class GPT():
   @classmethod
   #def set_key(cls):
   def set_key(cls, key):
-      openai.api_key = key
+      
       password_input = widgets.Password(
           description='Введите пароль:', 
           layout=widgets.Layout(width='500px'),
@@ -120,12 +130,9 @@ class GPT():
       #{"role": "user", "content": context}
       ]
     messages.extend(topic)
-    completion = openai.ChatCompletion.create(
-      #model="gpt-3.5-turbo",
-      model=self.modelVersion,
-      messages=messages,
-      temperature=temp
-      )
+    completion = client.chat.completions.create(model=self.modelVersion,
+    messages=messages,
+    temperature=temp)
     allToken = f'{completion["usage"]["total_tokens"]} токенов использовано всего (вопрос-ответ).'
     allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
     #return f'{completion.choices[0].message.content}\n\n{allToken}\n{allTokenPrice}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
@@ -197,12 +204,10 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     if (verbose): print('\n ===========================================: ')
     if (verbose): print(f"{self.num_tokens_from_messages(messages, 'gpt-3.5-turbo-0301')} токенов использовано на вопрос")
 
-    completion = openai.ChatCompletion.create(
-    model=self.modelVersion,
+    completion = client.chat.completions.create(model=self.modelVersion,
     #model="gpt-3.5-turbo",
     messages=messages,
-    temperature=temp
-    )
+    temperature=temp)
     if (verbose): print('\n ===========================================: ')
     if (verbose): print(f'{completion["usage"]["total_tokens"]} токенов использовано всего (вопрос-ответ).')
     if (verbose): print('\n ===========================================: ')
@@ -234,12 +239,10 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
       ]
     messages.extend(history)
     logger.info(f'answer message get_summary {messages}')
-    completion = openai.ChatCompletion.create(
-      model=self.modelVersion,
-      #model="gpt-3.5-turbo",
-      messages=messages,
-      temperature=temp
-      )
+    completion = client.chat.completions.create(model=self.modelVersion,
+    #model="gpt-3.5-turbo",
+    messages=messages,
+    temperature=temp)
     logger.info(f'{completion["usage"]["total_tokens"]=}')
     logger.info(f'{completion["usage"]=}')
     answer =completion.choices[0].message.content  
@@ -256,12 +259,9 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     #messages.extend(history[:-1])
     messages.extend(history[:-1])
 
-    completion = openai.ChatCompletion.create(
-        model=self.modelVersion,
-        messages=messages,
-        temperature=0.3,  # Используем более низкую температуру для более определенной суммаризации
-        #max_tokens=1000  # Ограничиваем количество токенов для суммаризации
-    )
+    completion = client.chat.completions.create(model=self.modelVersion,
+    messages=messages,
+    temperature=0.3)
     answer = completion.choices[0].message.content
     logger.info(f'Саммари диалога: {answer}')
     roleAsnwer= {'role': 'user', 'content': answer}
@@ -276,12 +276,9 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     #messages.extend(history[:-1])
     messages.extend(history[:-1])
 
-    completion = openai.ChatCompletion.create(
-        model=self.modelVersion,
-        messages=messages,
-        temperature=0.3,  # Используем более низкую температуру для более определенной суммаризации
-        #max_tokens=1000  # Ограничиваем количество токенов для суммаризации
-    )
+    completion = client.chat.completions.create(model=self.modelVersion,
+    messages=messages,
+    temperature=0.3)
     answer = completion.choices[0].message.content
     logger.info(f'Саммари диалога: {answer}')
     roleAsnwer= {'role': 'user', 'content': answer}
@@ -294,10 +291,8 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
       {"role": "user", "content": topic}
       ]
 
-    completion = openai.ChatCompletion.create(
-      model=self.modelVersion,
-      #model="gpt-3.5-turbo",
-      messages=messages,
-      temperature=temp
-      )
+    completion = client.chat.completions.create(model=self.modelVersion,
+    #model="gpt-3.5-turbo",
+    messages=messages,
+    temperature=temp)
     print('ОТВЕТ : \n', self.insert_newlines(completion.choices[0].message.content))
