@@ -133,10 +133,13 @@ class GPT():
     completion = client.chat.completions.create(model=self.modelVersion,
     messages=messages,
     temperature=temp)
-    allToken = f'{completion["usage"]["total_tokens"]} токенов использовано всего (вопрос-ответ).'
-    allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
+    totalToken = completion.usage.total_tokens
+    answerText =completion.choices[0].message.content
+
+    allToken = f'{totalToken} токенов использовано всего (вопрос-ответ).'
+    allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(totalToken/1000)} $'
     #return f'{completion.choices[0].message.content}\n\n{allToken}\n{allTokenPrice}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
-    return f'{completion.choices[0].message.content}', completion["usage"]["total_tokens"], 0.002*(completion["usage"]["total_tokens"]/1000)
+    return f'{answerText}', totalToken, 0.002*(totalToken/1000)
   
   @logger.catch
   def num_tokens_from_messages(self, messages, model="gpt-3.5-turbo-0301"):
