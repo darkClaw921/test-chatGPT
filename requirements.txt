@@ -10,3 +10,10 @@ loguru
 fast-bitrix24
 faiss-cpu
 urllib3
+python-dotenv
+ydb
+google-api-python-client
+"ydb[yc]"
+redis
+flask
+flask_socketio

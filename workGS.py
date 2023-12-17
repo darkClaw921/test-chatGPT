@@ -56,7 +56,8 @@ class Sheet():
             #if b == 10: 
             #    return allText, urls
             text = self.get_rom_value(i)
-            time.sleep(1.2)
+            # time.sleep(1.2)
+            time.sleep(3.2)
             a, url= prepare_text(text)
             allText += a
             urls.update(url)
