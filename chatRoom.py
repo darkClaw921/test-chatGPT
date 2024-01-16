@@ -4,7 +4,8 @@ import random
 from pprint import pprint
 from loguru import logger
 # from workTelegram import send_message_to_telegram
-
+from workYDB import Ydb
+from helper import get_dates, time_epoch
 import os
 import telebot
 from dotenv import load_dotenv
@@ -22,7 +23,36 @@ rooms = {}
 # def send_message_to_telegram():
     
     # pass
+sql = Ydb()
+def generate_rooms():
+    # global rooms
+    rooms = {}
+    users=sql.select_query('user',where='id>1')
+    dateBack30day = time_epoch() - 2592000000 #30 дней
+    # logger.debug(f'{dateBack30day=}')   
 
+    for user in users:
+        messages = sql.select_query('all_user_dialog',where=f'id={user["id"]} AND time_epoch>{dateBack30day}')
+        for message in messages:
+            room_code = str(user['id'])
+            if room_code not in rooms:
+                new_room = {
+                    'members': 0,
+                    'messages': []
+                }
+                rooms[room_code] = new_room
+
+            message = {
+                "sender": user['id'],
+                "message": message['TEXT'].decode()
+            }
+            rooms[room_code]["messages"].append(message)
+    
+    # logger.debug(f'{rooms=}')
+    pprint(rooms)
+    return rooms
+
+rooms = generate_rooms()
 def generate_room_code(length: int, existing_codes: list[str]) -> str:
     while True:
         code_chars = [random.choice('1213ASD213123') for _ in range(length)]
