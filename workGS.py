@@ -49,6 +49,7 @@ class Sheet():
         allText = '\n\n<Описание Проектов>'
         urls={}
         b =1
+        # for i in tqdm(range(2,200)):
         for i in tqdm(range(2,122)):
             #TODO сделать чтобы только заполненые строки
             #print(f'{b=}')
@@ -92,30 +93,30 @@ def prepare_text(lst:list):
     except Exception as e:
         print('ошибка в GS prepare_text ',e)
         text = f"""
-<Проект: {lst[table.C]}>""" 
+<Проект: {lst[table.D]}>""" 
         return text
     
     text = f"""
-<Проект: {lst[table.C]}>
+<Проект: {lst[table.D]}>
 
-м.кв.: {lst[table.F]}
+м.кв.: {lst[table.G]}
 
-Количество этажей: {lst[table.D]}
-Стиль: {lst[table.E]}
+Количество этажей: {lst[table.E]}
+Стиль: {lst[table.F]}
 
-{lst[table.G]}
+{lst[table.I]}
 {lst[table.H]}
 
-Стоимость {lst[table.C]}:
-Закрытый контур: {lst[table.J]}
-Теплый контур: {lst[table.K]}
-Внешняя отделка: {lst[table.L]}
+Стоимость {lst[table.D]}:
+Закрытый контур: {lst[table.K]}
+Теплый контур: {lst[table.L]}
+Внешняя отделка: {lst[table.M]}
 
-Фото проекта:{lst[table.C]}
-{lst[table.I]}
+Фото проекта:{lst[table.D]}
+{lst[table.J]}
     """
     print(f'{text=}')
-    urls.setdefault(lst[table.C], lst[table.I])
+    urls.setdefault(lst[table.D], lst[table.J])
     return text,urls 
 
 
@@ -123,6 +124,7 @@ def prepare_text(lst:list):
 if __name__ == '__main__':
     json = 'kgtaprojects-8706cc47a185.json'
     sheet = Sheet(json,'цены на дома 4.0 актуально ')
-    a = sheet.get_rom_value(113) 
-    a = prepare_text(a)
+    # a = sheet.get_rom_value(113) 
+    a = sheet.get_gs_text() 
+    # a = prepare_text(a)
     pprint(a)
